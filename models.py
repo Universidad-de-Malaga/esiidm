@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 # vim:ts=4:expandtab:ai
 <<<<<<< HEAD
+<<<<<<< HEAD
 # $Id$
 =======
+=======
+>>>>>>> 0f5e2f2 (is_ functions for persons)
 # $Id$
 
 >>>>>>> f9b7c3d (First version of models)
@@ -89,6 +92,12 @@ class Person(AbstractUser):
         #    models.UniqueConstraint(fields=['email', 'identifier'],
         #                            name='one_email_per_identifier'),
         #]
+
+    def is_officer(self):
+        return len(self.heis.all()) > 0
+
+    def is_student(self):
+        return len(self.cards.all()) > 0
 
 
 class StudentCard(models.Model):
