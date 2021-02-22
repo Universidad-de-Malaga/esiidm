@@ -57,8 +57,7 @@ class HEI(models.Model):
                            blank = True,
                            null = True,
                            verbose_name = _('Institution web site'))
-    country = models.CountryField(db_index = True,
-                                  verbose_name = _('Country'))
+    country = CountryField(db_index = True, verbose_name = _('Country'))
     pic = models.CharField(max_length = 20,
                            db_index = True,
                            unique = True,
@@ -78,8 +77,12 @@ class HEI(models.Model):
                            help_text = _('Your Internet domain. For ESI'))
     # ESC router information
     productionKey = models.CharField(max_length = 100,
+                                     blank = True,
+                                     null = True,
                                      verbose_name = _('ESC production key'))
     sandboxKey = models.CharField(max_length = 100,
+                                  blank = True,
+                                  null = True,
                                   verbose_name = _('ESC sandbox key'))
 
     class Meta:
@@ -87,16 +90,20 @@ class HEI(models.Model):
         verbose_name_plural = _('Higher Education Institutions')
 
 
+    def __str__(self):
+        return '{0.name} - {0.sho} - {0.pic}'.format(self)
+
     def generate_esc_code(self):
-        """Returns an ESC for a student enroled in the HEI
-           It is HEI specific, thus, we use a HEI object level method
+        """
+        Returns an ESC for a student enroled in the HEI
+        It is HEI specific, thus, we use a HEI object level method
         """
         import uuid
         # The machine ID is used by ESC in case there are more than system
         # producing ESC cards for an instituion, usually it is just one
         machineId = settings.__dict__.get('MACHINEID','001')
-        return str(uuid.uuid1(node=long('{}{}'.format(machineId,
-                                                      self.pic), 10)))
+        return str(uuid.uuid1(node=int('{}{}'.format(machineId,
+                                                     self.pic), 10)))
 
     def ESC_Router(self, operation, **kwargs):
         """
@@ -104,7 +111,7 @@ class HEI(models.Model):
         Depending on the operation the expected keyword args are:
         esi: an European Student Identifier
         esc: an European Student Card number
-        json: a JSON dcitionary with information to store in the router
+        json: a JSON dictionary with information to store in the router
 
         Returns a requests result or a mock-up object for big errors
         """
@@ -143,7 +150,7 @@ class HEI(models.Model):
             esi = kwargs.get('esi', None)
             if esi is None: return None
             r = requests.get(
-                    parse.urljoin(base_url, esi)),
+                    parse.urljoin(base_url, esi),
                     headers = headers,
                     timeout = settings.__dict__.get(ESCROUTER_TIME_OUT,1)
                 )
@@ -156,7 +163,7 @@ class HEI(models.Model):
             esi =  json.get('europeanStudentCardNumber', None)
             if esi is None: return r
             r = requests.put(
-                    parse.urljoin(base_url, esi)),
+                    parse.urljoin(base_url, esi),
                     headers = headers,
                     json = json,
                     timeout = settings.__dict__.get(ESCROUTER_TIME_OUT,1)
@@ -167,7 +174,7 @@ class HEI(models.Model):
             if json is None and esc is None: return None
             # Are we adding a card?
             if json is None and esc is not None and esi is not None:
-                base_url = parse.urljoin(base_url, '{}{}'format(esi, '/cards'))
+                base_url = parse.urljoin(base_url, '{}{}'.format(esi, '/cards'))
                 json = {'europeanStudentCardNumber': esc,
                         'cardType': 1},
             r = requests.post(base_url, headers = headers, json = json,
@@ -179,7 +186,7 @@ class HEI(models.Model):
             if esc is not None and esi is not None:
                 # Delete a card
                 base_url = parse.urljoin(base_url,
-                                         '{}{}'format(esi, '/cards/', esc))
+                                         '{}{}'.format(esi, '/cards/', esc))
             if esi is not None:
                 # Delete a student
                 base_url = parse.urljoin(base_url, esi)
@@ -187,9 +194,8 @@ class HEI(models.Model):
                     timeout = settings.__dict__.get(ESCROUTER_TIME_OUT,1))
             return r
 
-       # If we reach here, better return None
-       return None
-
+        # If we reach here, better return None
+        return None
 
 
 class Person(AbstractUser):
@@ -226,8 +232,8 @@ class Person(AbstractUser):
                                       editable = False)
 
     # It is possible to override the defaults in settings.py
-    USERNAME_FIELD = settings.__dict__.get(PERSON_USERNAME_FIELD, 'email')
-    REQUIRED_FIELDS = settings.__dict__.get(PERSON_REQUIRED_FIELDS, [])
+    USERNAME_FIELD = settings.__dict__.get('PERSON_USERNAME_FIELD', 'email')
+    REQUIRED_FIELDS = settings.__dict__.get('PERSON_REQUIRED_FIELDS', [])
 
     class Meta:
         verbose_name = _('Person')
@@ -249,7 +255,8 @@ class Person(AbstractUser):
 
 
 class StudentCard(models.Model):
-    """A class for describing student cards.
+    """
+    A class for describing student cards.
     Links persons to institutions as students.
     """
 
@@ -300,11 +307,15 @@ class StudentCard(models.Model):
                                     name='card_unique')
         ]
 
-    def save(self):
+    def __str__(self):
+        return '{0.student} - {0.esc} - {1}'.format(self, self.myESI())
+
+    def save(self, *args, **kwargs):
         """Check some data and generate what maybe needed"""
-        if esc is None or es == '':
+        if self.esc is None or self.esc == '':
             # Generate the ESC
-            esc = self.hei.generate_esc_code()
+            self.esc = self.hei.generate_esc_code()
+            super(StudentCard, self).save(*args, **kwargs)
 
     def is_registered(self):
         return self.registeredOn is not None
@@ -326,7 +337,7 @@ class StudentCard(models.Model):
     def expires(self):
         """
         Student status expiry date.
-        ISO 8601 Date Time Format: yyyy-12-31T23:59:59.000X.
+        ISO 8601 Date Time Format: yyyy-mm-dd:59:59.000X.
         If current month is before term start, year is current year,
         otherwise it is set to the next calendar year.
         Month is the term starting month.
@@ -334,8 +345,7 @@ class StudentCard(models.Model):
         now = datetime.date.now()
 
         year = now.year
-        if now.month > self.hei.termstart:
-            year += 1
+        if now.month > self.hei.termstart: year += 1
 
         day = calendar.monthrange(year, self.hei.termstart)[1]
 
@@ -345,39 +355,39 @@ class StudentCard(models.Model):
 
     def get_remote(self):
         """
-            Returns a dictionary with the information stored in the
-            European Student Card Router for a given ESI.
-            None if it doesn't exist.
-            Ex:
-               {
-                   u'cards': [
-                       {
-                           u'cardType': 1,
-                            u'europeanStudentCardNumber': 
-                                    u'b881984a-0b88-11e9-98a4-0000773406c7',
-                        }
-                    ],
-                    u'emailAddress': u'0617102195@uma.es',
-                    u'europeanStudentIdentifier': u'ES-999898311-0617102195',
-                    u'expiryDate': u'2019-12-31T23:59:59.000Z',
-                    u'picInstitutionCode': 999898311,
-                }
-            If debug is True, it returns more information.
+        Returns a dictionary with the information stored in the
+        European Student Card Router for a given ESI.
+        None if it doesn't exist.
+        Ex:
+           {
+               u'cards': [
+                   {
+                       u'cardType': 1,
+                        u'europeanStudentCardNumber': 
+                                u'b881984a-0b88-11e9-98a4-0000773406c7',
+                    }
+                ],
+                u'emailAddress': u'0617102195@uma.es',
+                u'europeanStudentIdentifier': u'ES-999898311-0617102195',
+                u'expiryDate': u'2019-12-31T23:59:59.000Z',
+                u'picInstitutionCode': 999898311,
+            }
+        If debug is True, it returns more information.
         """
         return self.hei.ESC_Router('GET', esi = self.myESI())
 
 
     def card_exists(self):
         """
-            Returns True if the card exists in the ESC Router.
-            False if it does not.
+        Returns True if the card exists in the ESC Router.
+        False if it does not.
         """
         return bool(self.get_remote())
 
     def cards(self):
         """
-            Returns a list of cards from the ESC router
-            that have the same ESI as the current one.
+        Returns a list of cards from the ESC router
+        that have the same ESI as the current one.
         """
         attributes = self.get_remote()
         if attributes and attributes.get("cards", list()):
@@ -385,7 +395,7 @@ class StudentCard(models.Model):
                     for x in attributes['cards']]
         return list()
 
-    def save_in_ESCR(self):
+    def save_in_ESCR(self, debug = False):
         """
         Insert or update the card in the European Student Card Router,
         Returns True if everything went well.
@@ -412,6 +422,10 @@ class StudentCard(models.Model):
                     return r.status_code, r.url, 'Add card response', r.text
                 return False
 
+        if operation == 'POST': 
+            self.registeredOn = datetime.datetime.now()
+            self.save()
+
         if debug:
             return r.status_code, r.url, 'Last response', r.text
         return True
@@ -435,7 +449,7 @@ class StudentCard(models.Model):
             result = self.delete_student()
         return result
 
-    def delete_student(self)
+    def delete_student(self):
         """
         Removes the information about the student from the ESC Router.
         Only students with no cards can be removed.
@@ -488,4 +502,7 @@ class Officer(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['person', 'hei'], name='manager_unique')
         ]
+
+    def __str__(self):
+        return '{0.person} => {0.hei}'.format(self)
 
