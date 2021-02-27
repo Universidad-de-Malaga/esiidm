@@ -26,8 +26,100 @@ import calendar
 
 # Create your models here.
 
+class Person(AbstractUser):
+    """A class for describing persons"""
+
+    username = None  # We are not going to use usernames
+    identifier = models.CharField(max_length = 300,
+                          db_index = True, blank=True, null=True,
+                          verbose_name = _('Government issued identifier'))
+
+    # Control information
+    otp = models.CharField(max_length = 36,
+                           db_index = True,
+                           verbose_name = _('Invitation code'),
+                           default = uuid.uuid4,
+                           editable = False)
+    managedBy = models.ForeignKey('self',
+                                  on_delete = models.PROTECT,
+                                  db_index = True,
+                                  default = 1,
+                                  related_name = 'persons',
+                                  related_query_name = 'person',
+                                  verbose_name = _('Responsible person'))
+    createdOn = models.DateTimeField(verbose_name = _('Created on'),
+                                     auto_now_add = True,
+                                     db_index = True,
+                                     editable = False)
+    modifiedOn = models.DateTimeField(verbose_name = _('Modified on'),
+                                      auto_now = True,
+                                      db_index = True,
+                                      editable = False)
+    acceptedOn = models.DateTimeField(verbose_name = _('Accepted on'),
+                                      null = True,
+                                      blank = True,
+                                      db_index = True,
+                                      editable = False)
+
+    # It is possible to override the defaults in settings.py
+    USERNAME_FIELD = settings.__dict__.get('PERSON_USERNAME_FIELD', 'email')
+    REQUIRED_FIELDS = settings.__dict__.get('PERSON_REQUIRED_FIELDS', [])
+
+    class Meta:
+        verbose_name = _('Person')
+        verbose_name_plural = _('Persons')
+        index_together = ['email', 'identifier']
+        ordering = ['last_name', 'first_name']
+        constraints = [
+            models.UniqueConstraint(fields=['email', 'identifier'],
+                                    name='one_email_per_identifier'),
+        ]
+
+    @property
+    def is_officer(self):
+        return len(self.heis.all()) > 0
+
+    @property
+    def is_student(self):
+        return len(self.cards.all()) > 0
+
+    @property
+    def has_accepted(self):
+        return self.acceptedOn is not None
+
+    def myHEI(self):
+        # The most common use case is "one Person <-> one HEI", 
+        # so we return the first HEI
+        if self.is_officer: return self.heis.first().hei
+        if self.is_student: return self.cards.first().hei
+
+    def save(self, *args, **kwargs):
+        """
+        We do some checks before saving
+        """
+        # In case someone decides to remove consent, we remove the cards
+        if not self.has_accepted and len(self.cards.all()) > 0:
+            for card in self.cards.all(): card.delete()
+        # If someone has consented and there are unregistered associated cards
+        for card in self.cards.filter(registeredOn__isnull=True):
+            # Send the information to the ESC Router
+            card.save_in_ESCR()
+        super(Person, self).save(*args, **kwargs)
+            
+    def delete(self, *args, **kwargs):
+        """
+        Delete cards before removing the person
+        """
+        for card in self.cards.all(): card.delete()
+        # If there are cards left, something went wrong
+        # we cannot delete the person
+        if not len(self.cards.all()): return
+        super(Person, self).delete(*args, **kwargs)
+            
+
 class HEI(models.Model):
-    """A class for describing a High Education Institution
+    """
+    A class for describing a Higher Education Institution
     These will be the root for administrators and students
     """
 
@@ -86,6 +178,19 @@ class HEI(models.Model):
                                   blank = True,
                                   null = True,
                                   verbose_name = _('ESC sandbox key'))
+    # Control attributes
+    managedBy = models.ForeignKey(Person,
+                                  on_delete = models.PROTECT,
+                                  db_index = True,
+                                  verbose_name = _('Responsible person'))
+    createdOn = models.DateTimeField(verbose_name = _('Created on'),
+                                     auto_now_add = True,
+                                     db_index = True,
+                                     editable = False)
+    modifiedOn = models.DateTimeField(verbose_name = _('Modified on'),
+                                      auto_now = True,
+                                      db_index = True,
+                                      editable = False)
 
     class Meta:
         verbose_name = _('Higher Education Institution')
@@ -230,88 +335,6 @@ class HEI(models.Model):
         return None
 
 
-class Person(AbstractUser):
-    """A class for describing persons"""
-
-    username = None  # We are not going to use usernames
-    identifier = models.CharField(max_length = 300,
-                          db_index = True, blank=True, null=True,
-                          verbose_name = _('Government issued identifier'))
-
-    # Control information
-    otp = models.CharField(max_length = 36,
-                           db_index = True,
-                           verbose_name = _('Invitation code'),
-                           default = uuid.uuid4,
-                           editable = False)
-    managedBy = models.ForeignKey('self',
-                                  on_delete = models.PROTECT,
-                                  db_index = True,
-                                  default = 1,
-                                  related_name = 'persons',
-                                  related_query_name = 'person',
-                                  verbose_name = _('Responsible person'))
-    createdOn = models.DateTimeField(verbose_name = _('Created on'),
-                                     auto_now_add = True,
-                                     db_index = True,
-                                     editable = False)
-    modifiedOn = models.DateTimeField(verbose_name = _('Modified on'),
-                                      auto_now = True,
-                                      db_index = True,
-                                      editable = False)
-    acceptedOn = models.DateTimeField(verbose_name = _('Accepted on'),
-                                      null = True,
-                                      blank = True,
-                                      db_index = True,
-                                      editable = False)
-
-    # It is possible to override the defaults in settings.py
-    USERNAME_FIELD = settings.__dict__.get('PERSON_USERNAME_FIELD', 'email')
-    REQUIRED_FIELDS = settings.__dict__.get('PERSON_REQUIRED_FIELDS', [])
-
-    class Meta:
-        verbose_name = _('Person')
-        verbose_name_plural = _('Persons')
-        index_together = ['email', 'identifier']
-        ordering = ['last_name', 'first_name']
-        constraints = [
-            models.UniqueConstraint(fields=['email', 'identifier'],
-                                    name='one_email_per_identifier'),
-        ]
-
-    def is_officer(self):
-        return len(self.heis.all()) > 0
-
-    def is_student(self):
-        return len(self.cards.all()) > 0
-
-    def has_accepted(self):
-        return self.acceptedOn is not None
-
-    def save(self, *args, **kwargs):
-        """
-        We do some checks before saving
-        """
-        # In case someone decides to remove consent, we remove the cards
-        if not self.has_accepted and len(self.cards.all()) > 0:
-            for card in self.cards.all(): card.delete()
-        # If someone has consented and there are unregistered associated cards
-        for card in self.cards.filter(registeredOn__isnull=True):
-            # Send the information to the ESC Router
-            card.save_in_ESCR()
-        super(Person, self).save(*args, **kwargs)
-            
-    def delete(self, *args, **kwargs):
-        """
-        Delete cards before removing the person
-        """
-        for card in self.cards.all(): card.delete()
-        # If there are cards left, something went wrong
-        # we cannot delete the person
-        if not len(self.cards.all()): return
-        super(Person, self).delete(*args, **kwargs)
-            
-
 class Officer(models.Model):
     """A class for linking persons to the institutions they manage"""
 
@@ -348,7 +371,8 @@ class Officer(models.Model):
         index_together = ['person', 'hei']
         ordering = ['hei', 'person']
         constraints = [
-            models.UniqueConstraint(fields=['person', 'hei'], name='manager_unique')
+            models.UniqueConstraint(fields=['person', 'hei'],
+                                    name='manager_unique')
         ]
 
     def __str__(self):
@@ -441,11 +465,12 @@ class StudentCard(models.Model):
             # Generate the ESC
             self.esc = self.hei.generate_esc_code()
         # Does the card exist in the ESC router? It does if it was registered
-        if self.registeredOn is None and self.student.acceptedOn is not None:
+        if not self.is_registered and self.student.has_accepted:
             # If the person has consented and card is not in the ESCR, save it
             self.save_in_ESCR()
         super(StudentCard, self).save(*args, **kwargs)
 
+    @property
     def is_registered(self):
         return self.registeredOn is not None
 
@@ -453,7 +478,7 @@ class StudentCard(models.Model):
         """
         Clean up in the ESC Router before deleting local information.
         """
-        if self.is_registered():
+        if self.is_registered:
             # Only call the ESC Router if the card has been registered
             if not self.delete_card():
                 # ESC deletion failed, we can't delete the card
@@ -520,6 +545,7 @@ class StudentCard(models.Model):
         return self.hei.ESC_Router('GET', esi = self.myESI())
 
 
+    @property
     def card_exists(self):
         """
         Returns True if the card exists in the ESC Router.
@@ -527,6 +553,7 @@ class StudentCard(models.Model):
         """
         return bool(self.get_remote())
 
+    @property
     def cards(self):
         """
         Returns a list of cards from the ESC router
@@ -550,11 +577,11 @@ class StudentCard(models.Model):
                }
 
         operation = 'POST'
-        if self.is_registered(): operation = 'PUT'
+        if self.is_registered: operation = 'PUT'
         r = self.hei.ESC_Router(operation, json = data)
         if r.status_code != 201: return False
 
-        if self.esc not in self.cards():
+        if self.esc not in self.cards:
             # Add card
             r = self.hei.ESC_Router('POST', esi = self.myESI(), esc = self.esc)
             if r.status_code != 201:
@@ -573,7 +600,7 @@ class StudentCard(models.Model):
         If there are no cards left and student is True, removes the student.
         """
         result = True
-        cards = self.cards()
+        cards = self.cards
         if self.esc in cards:
             # Delete card
             r = self.hei.ESC_Router('DELETE',
@@ -590,7 +617,7 @@ class StudentCard(models.Model):
         Removes the information about the student from the ESC Router.
         Only students with no cards can be removed.
         """
-        if len(self.cards()) == 0:
+        if len(self.cards) == 0:
             # No cards left for the ESI
             r = self.hei.ESC_Router('DELETE', esi = self.myESI())
             return r.status_code == 204
