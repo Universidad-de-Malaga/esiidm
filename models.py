@@ -77,11 +77,11 @@ class Person(AbstractUser):
 
     @property
     def is_officer(self):
-        return len(self.heis.all()) > 0
+        return Officer.objects.filter(person=self).exists()
 
     @property
     def is_student(self):
-        return len(self.cards.all()) > 0
+        return StudentCard.objects.filter(student=self).exists()
 
     @property
     def has_accepted(self):
@@ -90,15 +90,24 @@ class Person(AbstractUser):
     def myHEI(self):
         # The most common use case is "one Person <-> one HEI", 
         # so we return the first HEI
-        if self.is_officer: return self.heis.first().hei
+        if self.is_officer: return self.manages.first().hei
         if self.is_student: return self.cards.first().hei
+
+    @property
+    def HEIs(self):
+        # Officers may manage more than one HEI, we need them as QuerySet
+        if not self.is_officer: return []
+        # List of HEIs the person is an Officer for
+        heis = [o.hei.id for o in self.manages.all()]
+        return HEI.objects.filter(id__in=heis)
+
 
     def save(self, *args, **kwargs):
         """
         We do some checks before saving
         """
         # In case someone decides to remove consent, we remove the cards
-        if not self.has_accepted and len(self.cards.all()) > 0:
+        if not self.has_accepted and self.cards.count() > 0:
             for card in self.cards.all(): card.delete()
         # If someone has consented and there are unregistered associated cards
         for card in self.cards.filter(registeredOn__isnull=True):
@@ -113,7 +122,7 @@ class Person(AbstractUser):
         for card in self.cards.all(): card.delete()
         # If there are cards left, something went wrong
         # we cannot delete the person
-        if not len(self.cards.all()): return
+        if not self.is_student: return
         super(Person, self).delete(*args, **kwargs)
             
 
@@ -341,8 +350,8 @@ class Officer(models.Model):
     person = models.ForeignKey(Person,
                                on_delete = models.DO_NOTHING,
                                db_index = True, 
-                               related_name = 'heis',
-                               related_query_name = 'hei',
+                               related_name = 'manages',
+                               related_query_name = 'manage',
                                verbose_name = _('Person that manages a HEI'))
     hei = models.ForeignKey(HEI,
                             on_delete = models.CASCADE,
@@ -415,6 +424,7 @@ class StudentCard(models.Model):
                             verbose_name = _("Person's HEI"))
     esc = models.CharField(max_length = 300,
                            db_index = True, 
+                           editable = False,
                            unique = True,
                            verbose_name = _('European Student Card number'))
     esi = models.CharField(max_length = 300,
@@ -617,7 +627,7 @@ class StudentCard(models.Model):
         Removes the information about the student from the ESC Router.
         Only students with no cards can be removed.
         """
-        if len(self.cards) == 0:
+        if self.cards.count() == 0:
             # No cards left for the ESI
             r = self.hei.ESC_Router('DELETE', esi = self.myESI())
             return r.status_code == 204
