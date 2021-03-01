@@ -4,6 +4,7 @@
 
 from django.contrib import admin
 from django.db.models import Q
+from django.utils.translation import ugettext_lazy as _
 
 # Register your models here.
 from .models import HEI, Person, Officer, StudentCard
@@ -32,6 +33,23 @@ class PersonAdmin(admin.ModelAdmin):
     list_display_links = ['email', 'identifier', 'last_name']
     list_display = ['email', 'identifier', 'last_name', 'has_accepted']
 
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj=None, **kwargs)
+        disabled_fields = set()
+        if not request.user.is_superuser:
+            disabled_fields |= {'is_superuser',
+                                'user_permissions', 'managedBy'}
+        if (not request.user.is_superuser
+            and obj is not None
+            and obj == request.user
+           ):
+            disabled_fields |= {'is_staff', 'is_superuser',
+                                'groups', 'user_permissions'}
+        for f in disabled_fields:
+            if f in form.base_fields:
+                form.base_fields[f].disabled = True
+        return form
+
     def has_view_permission(self, request, obj=None):
         if not super(PersonAdmin, self).has_view_permission(request, obj):
             return False
@@ -53,13 +71,10 @@ class PersonAdmin(admin.ModelAdmin):
             return True
         return False
 
-    def get_exclude(self, request, obj=None):
-        # Allow the Superusers to "get rid" of people by changing the manager
-        if request.user.is_superuser:
-            return []
-        return ['managedBy',]
-        
-    def get_display(self, request, obj=None):
+    def get_changeform_initial_data(self, request):
+        return {'managedBy': request.user}
+
+    def get_listdisplay(self, request, obj=None):
         # Is the user a superuser or an officer for several HEIs
         if request.user.is_superuser or (request.user.is_officer and
                                          request.user.HEIs.count() > 1):
@@ -80,6 +95,37 @@ class PersonAdmin(admin.ModelAdmin):
             kwargs["queryset"] = Person.objects.filter(is_staff=True)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = []
+        if not request.user.is_superuser and request.user.is_officer:
+            readonly_fields = []
+        return readonly_fields
+
+    def get_fieldsets(self, request, obj=None):
+        # Adapt the field sets depending on who's managing the person
+        # (_(''), {'fields': []}),
+        fieldsets = [(None, {'fields': [('first_name','last_name'),
+                                        ('email','identifier')]}),]
+        if obj is None:
+            if 'password' not in fieldsets[0][1]['fields']:
+                fieldsets[0][1]['fields'].append('password')
+        if request.user.is_staff or request.user.is_superuser:
+            if 'managedBy' not in fieldsets[0][1]['fields']:
+                fieldsets[0][1]['fields'].append('managedBy')
+        if request.user.is_superuser and len(fieldsets) == 1:
+            fieldsets.append((_('Access control'), {'classes': ('collapse',),
+                                                    'fields': [('is_active',
+                                                               'is_staff',
+                                                               'is_superuser')
+                                                              ]}))
+            fieldsets.append((_('Permissions'), {'classes': ('collapse',),
+                                                 'fields': ['user_permissions',
+                                                            'groups']}))
+            fieldsets.append((_('Administrivia'), {'classes': ('collapse',),
+                                                   'fields': [('last_login',
+                                                               'date_joined')
+                                                             ]}))
+        return fieldsets
 
 @admin.register(HEI)
 class HEIAdmin(admin.ModelAdmin):
@@ -102,9 +148,11 @@ class HEIAdmin(admin.ModelAdmin):
         if not super(HEIAdmin, self).has_change_permission(request, obj):
             return False
         if obj is None : return True
-        # Only superusers or the manager for the HEI can view a HEI
+        # Only superusers or the manager for the HEI can chage a HEI
         if obj is not None and (request.user.id == obj.managedBy.id
                                 or request.user.is_superuser):
+            return True
+        if obj is not None and (obj in request.user.HEIs):
             return True
         return False
 
@@ -129,6 +177,7 @@ class HEIAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         if request.user.is_superuser: return HEI.objects.all()
+        if request.user.is_officer: return request.user.HEIs
         return HEI.objects.filter(managedBy=request.user)
 
     def save_model(self, request, obj, form, change):
@@ -136,6 +185,26 @@ class HEIAdmin(admin.ModelAdmin):
             obj.managedBy = request.user
         super().save_model(request, obj, form, change)
 
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = []
+        if not request.user.is_superuser and request.user.is_officer:
+            readonly_fields = ['name', 'country', 'url', 
+                               'pic', 'sho', 'euc', 'erc']
+        return readonly_fields
+
+    def get_fieldsets(self, request, obj=None):
+        # Adapt the field sets depending on who's managing the person
+        # (_(''), {'fields': []}),
+        fieldsets = [(None, {'fields': [('name', 'country', 'url'),
+                                        'termstart',]}),
+                     (_('Erasmus'), {'fields': [('pic', 'euc'),
+                                                ('erc', 'sho')]}),
+                     (_('European Student Card'), {'fields': ['productionKey',
+                                                              'sandboxKey']})]
+        if request.user.is_superuser and len(fieldsets) == 3:
+            fieldsets.append((_('Access control'), {'fields': [('managedBy',)
+                                                              ]}))
+        return fieldsets
 
 @admin.register(Officer)
 class OfficerAdmin(admin.ModelAdmin):
@@ -145,6 +214,7 @@ class OfficerAdmin(admin.ModelAdmin):
     search_fields = ['person__email', 'hei__pic', 'hei__euc', 'hei__sho']
     list_display = ['person',]
     list_display_links = ['person',]
+    fieldsets = [(None, {'fields': [('person', 'hei'), 'manager']})]
 
     def has_view_permission(self, request, obj=None):
         if not super(OfficerAdmin, self).has_view_permission(request, obj):
@@ -210,6 +280,9 @@ class StudentCardAdmin(admin.ModelAdmin):
     list_display = ['esi', 'student']
     list_display_links = ['esi', 'student',]
     select_related = True
+    fieldsets = [(None, {'fields': [('student', 'hei'), ('esi', 'esc'),
+                         'manager']})]
+    readonly_fields = ['esc']
 
     def has_add_permission(self, request):
         if not super(StudentCardAdmin, self).has_add_permission(request):
