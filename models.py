@@ -14,6 +14,7 @@ from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 from django.core.signing import TimestampSigner
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import pgettext_lazy as pgettext
 from django.utils import timezone
 from django_countries.fields import CountryField
 from django.contrib.auth.models import AbstractUser
@@ -126,6 +127,92 @@ class Person(AbstractUser):
         super(Person, self).delete(*args, **kwargs)
             
 
+class IdSource(models.Model):
+    """
+    A class for defining authetication sources
+    The relevant attributes for objects of this class are:
+    - Source: a string that identifies the source in the system
+    - Attribute: the attribute providing the value that links to a person
+    - Extractor: a regular expression for extracting the value that
+                 will be used to identify a given individual
+    """
+
+    source = models.CharField(max_length = 100,
+                                  db_index = True,
+                                  unique = True,
+                                  verbose_name = _('Source name'))
+    attribute = models.CharField(max_length = 100,
+                                 db_index = True,
+                                 verbose_name = _('Attribute name'))
+    extractor = models.CharField(max_length = 200,
+                                 default = '.*',
+                                 verbose_name = _('Extractor'),
+                                 help_text = _(
+                                 'Regular expression for extracting the value.'))
+
+    # Control data
+    createdOn = models.DateTimeField(verbose_name = _('Created on'),
+                                     auto_now_add = True,
+                                     db_index = True,
+                                     editable = False)
+    modifiedOn = models.DateTimeField(verbose_name = _('Modified on'),
+                                      auto_now = True,
+                                      db_index = True,
+                                      editable = False)
+
+    class Meta:
+        verbose_name = _('Authentication source')
+        verbose_name_plural = _('Authentication sources')
+        index_together = ['source', 'attribute']
+        ordering = ['source', 'attribute']
+        constraints = [
+            models.UniqueConstraint(fields=['source', 'attribute'],
+                                    name='one_attribute_per_source'),
+        ]
+
+
+class Identifier(models.Model):
+    """
+    A class that links Persons and identifiers in authentication sources
+    """
+    source = models.ForeignKey(IdSource,
+                               on_delete = models.CASCADE,
+                               db_index = True,
+                               editable = False,
+                               verbose_name = _('Identification source'))
+    person = models.ForeignKey(Person,
+                               on_delete = models.CASCADE,
+                               db_index = True,
+                               editable = False,
+                               related_name = 'identifiers',
+                               related_query_name = 'person_identifiers',
+                               verbose_name = _('Person'))
+    value = models.CharField(max_length = 100,
+                             db_index = True,
+                             editable = False,
+                             verbose_name = _('Identifier value'))
+
+    # Control data
+    createdOn = models.DateTimeField(verbose_name = _('Created on'),
+                                     auto_now_add = True,
+                                     db_index = True,
+                                     editable = False)
+    modifiedOn = models.DateTimeField(verbose_name = _('Modified on'),
+                                      auto_now = True,
+                                      db_index = True,
+                                      editable = False)
+
+    class Meta:
+        verbose_name = _('Identifier')
+        verbose_name_plural = _('Identifiers')
+        index_together = ['source', 'person', 'value']
+        ordering = ['person', 'source', 'value']
+        constraints = [
+            models.UniqueConstraint(fields=['person', 'source', 'value'],
+                                    name='one_value_per_attribute_per_person'),
+        ]
+
+
 class HEI(models.Model):
     """
     A class for describing a Higher Education Institution
@@ -137,7 +224,7 @@ class HEI(models.Model):
                 (2,_('February')),
                 (3,_('March')),
                 (4,_('April')),
-                (5,_('May')),
+                (5,pgettext('month name', 'May')),
                 (6,_('June')),
                 (7,_('July')),
                 (8,_('August')),
@@ -399,6 +486,7 @@ class Officer(models.Model):
         # Pass all cards to the first replacement in line
         for card in self.cards.all(): card.manager = replacements[0]
         # Pass all persons related to te person that is the deleted officer
+        # >>>>>>>>>>>>>>>>> Falta update or save de la persona
         for person in self.persons.all(): person.managedBy = replacements[0]
         super(Officer, self).delete(*args, **kwargs)
 

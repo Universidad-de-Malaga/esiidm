@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 # Register your models here.
-from .models import HEI, Person, Officer, StudentCard
+from .models import HEI, Person, Officer, StudentCard, IdSource, Identifier
 
 class CountryListFilter(admin.SimpleListFilter):
     title = 'Country'
@@ -26,12 +26,35 @@ class CountryListFilter(admin.SimpleListFilter):
             return queryset
 
 
+class IdentifierInline(admin.TabularInline):
+  model = Identifier
+  hidden_fields = ('id')
+
+    def has_view_permission(self, request, obj=None):
+        if not super(IdentifierAdmin, self).has_view_permission(request, obj):
+            return False
+        if obj is None : return True
+        # Not even superusers should view Identifiers for
+        # Persons they do not manage
+        if obj is not None and request.user.id == obj.person.managedBy.id:
+            return True
+        # Persons with admin privileges can view their data
+        if obj is not None and request.user.id == obj.person.id:
+            return True
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        # Nobody may change identifier data, it has to happen from an invite
+        return False
+
+
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     #list_filter = ['has_accepted']
     search_fields = ['email', 'identifier', 'last_name']
     list_display_links = ['email', 'identifier', 'last_name']
     list_display = ['email', 'identifier', 'last_name', 'has_accepted']
+    inlines = [ IdentifierInline ]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj=None, **kwargs)
@@ -323,4 +346,11 @@ class StudentCardAdmin(admin.ModelAdmin):
             obj.manager = request.user
         super().save_model(request, obj, form, change)
 
+@admin.register(IdSource)
+class IdSourceAdmin(admin.ModelAdmin):
+    search_fields = ['source', 'attribute',]
+    list_display = ['source', 'attribute', 'extractor']
+    list_editable = ['attribute', 'extractor']
+    list_display_links = ['source', ]
+    fieldsets = [(None, {'fields': [('source', 'attribute'), 'extractor']})]
 
