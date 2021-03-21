@@ -3,11 +3,20 @@
 # $Id$
 
 from django.contrib import admin
+from django.template.response import TemplateResponse
+from django.urls import path
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ngettext
+from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect
+from django.http import HttpResponseForbidden
+from django.conf import settings
 
 # Register your models here.
 from .models import HEI, Person, Officer, StudentCard, IdSource, Identifier
+from .forms import cardLoadForm, heiLoadForm, officerLoadForm
 
 class CountryListFilter(admin.SimpleListFilter):
     title = 'Country'
@@ -27,8 +36,8 @@ class CountryListFilter(admin.SimpleListFilter):
 
 
 class IdentifierInline(admin.TabularInline):
-  model = Identifier
-  hidden_fields = ('id')
+    model = Identifier
+    hidden_fields = ('id')
 
     def has_view_permission(self, request, obj=None):
         if not super(IdentifierAdmin, self).has_view_permission(request, obj):
@@ -150,12 +159,14 @@ class PersonAdmin(admin.ModelAdmin):
                                                              ]}))
         return fieldsets
 
+
 @admin.register(HEI)
 class HEIAdmin(admin.ModelAdmin):
     list_filter = [CountryListFilter]
     search_fields = ['name', 'pic', 'euc', 'sho']
     list_display = ['name', 'pic', 'sho', 'url', 'erc']
     list_display_links = ['name', 'pic', 'sho']
+    #change_list_template = 'esiidm/hei_changelist.html'
 
     def has_view_permission(self, request, obj=None):
         if not super(HEIAdmin, self).has_view_permission(request, obj):
@@ -225,9 +236,106 @@ class HEIAdmin(admin.ModelAdmin):
                      (_('European Student Card'), {'fields': ['productionKey',
                                                               'sandboxKey']})]
         if request.user.is_superuser and len(fieldsets) == 3:
-            fieldsets.append((_('Access control'), {'fields': [('managedBy',)
-                                                              ]}))
+            fieldsets.append((_('Access control'),
+                             {'fields': [('managedBy',)]}))
         return fieldsets
+
+    def get_urls(self):
+        urls = super().get_urls()
+        urls.insert(0, path('hei_load/',
+                    self.admin_site.admin_view(self.load_heis)))
+        return urls
+
+    def load_heis(self, request):
+        """
+        A view for loading HEIs.
+        Only superusers can load HEIs.
+        HEIs are uploaded in CSV format with a minimum set of fields:
+            - name : HEI name
+            - country : HEI country ISO two letter code
+            - pic : HEI PIC code
+            - euc : HEI EUC code
+            - erc : HEI Erasmus code
+            - sho : SCHAC Home Organization (HEI Internet domain)
+        Optional fields:
+            - url : HEI main web page
+            - termstart : month when term starts (1 through 12)
+            - manager : email address for the main HEI officer
+        """
+    
+        user = request.user
+        if not user.is_superuser: 
+            return HttpResponseForbidden(_('Access not permitted'))
+        errors = []
+        if request.method == 'POST':
+            # Process the form
+            form = heiLoadForm(request.POST, request.FILES)
+            #if not form.is_valid():
+            #    return render(request, 'esiidm/load_heis.html', {'form': form})
+            data = request.FILES['data']
+            data.seek(0)
+            lines = csv.DictReader(io.StringIO(data.read().decode('utf-8')))
+            # There must be at least one line and it must contain the required fields
+            total = 1
+            inserted = 0
+            # Let's load the data
+            for line in lines:
+                total += 1
+                errors_in_line = False
+                for field in ['name', 'country', 'pic', 'euc', 'erc', 'sho']:
+                    if line.get(field, '').strip() == '':
+                        errors_in_line = True
+                        errors.append(_(f'Field {field} missing on line {total}'))
+                if errors_in_line: continue
+                manager_mail = line.get('manager', '').strip()
+                manager = Person.objects.filter(email=manager_mail).first()
+                # Do we have a main manager?
+                if manager is None:
+                    e = _(f'Manager {manager_mail} in line {total} does not exist')
+                    errors.append(e)
+                    continue
+                # We are good, create the HEI if it does not exist
+                hei, new  = HEI.objects.get_or_create(pic=line['pic'],
+                                                      euc=line['euc'],
+                                                      erc=line['erc'])
+                if not new:
+                    e = _(f'{hei} already exists in line {total}')
+                    errors.append(e)
+                    continue
+                hei.manager = manager
+                hei.name = line['name']
+                hei.country = line['country']
+                hei.sho = line['sho']
+                hei.url = line.get('url', '')
+                hei.termstart = line.get('termstart',
+                                         settings.__dict__.get('TERM_START', 9))
+                try:
+                    hei.save()
+                    inserted += 1
+                except:
+                    e = _(f'{hei} in line {total} not saved. Existing data.')
+                    errors.append(e)
+                    continue
+            # Data processed, how did it go...
+            # At least one HEI inserted
+            if not inserted == 0:
+                self.message_user(request,
+                                  ngettext(f'{inserted} HEI loaded',
+                                           f'{inserted} HEIs loaded',
+                                           inserted),
+                                  messages.SUCCESS)
+            # All went well, no errors
+            if len(errors) == 0:
+                return redirect('..')
+            for e in errors: 
+                self.message_user(request, e, messages.WARNING)
+        # Render the form
+        if len(errors) == 0:
+            # Get a fresh form
+            form = heiLoadForm()
+        context = dict(self.admin_site.each_context(request), form = form)
+        return TemplateResponse(request, 'esiidm/load_heis.html', context)
+
 
 @admin.register(Officer)
 class OfficerAdmin(admin.ModelAdmin):
@@ -238,6 +346,7 @@ class OfficerAdmin(admin.ModelAdmin):
     list_display = ['person',]
     list_display_links = ['person',]
     fieldsets = [(None, {'fields': [('person', 'hei'), 'manager']})]
+    #change_list_template = 'esiidm/officer_changelist.html'
 
     def has_view_permission(self, request, obj=None):
         if not super(OfficerAdmin, self).has_view_permission(request, obj):
@@ -296,6 +405,106 @@ class OfficerAdmin(admin.ModelAdmin):
             obj.manager = request.user
         super().save_model(request, obj, form, change)
 
+    def get_urls(self):
+        urls = super().get_urls()
+        urls.insert(0, path('officer_load/',
+                    self.admin_site.admin_view(self.load_officers)))
+        return urls
+
+    def load_officers(self,request):
+        """
+        A view for loading HEI officers.
+        Only superusers can load officers.
+        An officer is just a person that has special status and is linked to a HEI
+        The first officer for a HEI may be loaded as an unlinked person and the link
+        is later established when the HEI is created.
+        Officers are uploaded in CSV format with a minimum set of fields:
+            - first_name : officer's given name
+            - last_name : officer's family name
+            - email : officer's email
+        Optional fields:
+            - identifier : government issued identifier for the person
+            - pic : officer's HEI PIC code
+            - euc : officer's HEI EUC code
+            - erc : officer's HEI ERC code
+            Only one of PIC, EUC or ERC is required for linking the officer
+            to the HEI. If there is no HEI, the person is created in the system
+            with needed privileges but no associated HEI.
+            Persons receive an invitation via email for activating the account.
+        """
+    
+        user = request.user
+        if not user.is_superuser: 
+            return HttpResponseForbidden(_('Access not permitted'))
+        errors = []
+        new_persons = []
+        if request.method == 'POST':
+            # Process the form
+            form = officerLoadForm(request.POST, request.FILES)
+            #if not form.is_valid():
+            #    return render(request, 'esiidm/load_officers.html', {'form': form})
+            data = request.FILES['data']
+            data.seek(0)
+            lines = csv.DictReader(io.StringIO(data.read().decode('utf-8')))
+            # There must be at least one line and it must contain the required fields
+            total = 1
+            inserted = 0
+            # Let's load the data
+            for line in lines:
+                total += 1
+                errors_in_line = False
+                for field in ['first_name', 'last_name', 'email']:
+                    if line.get(field, '').strip() == '':
+                        errors_in_line = True
+                        errors.append(_(f'Field {field} missing on line {total}'))
+                if errors_in_line: continue
+                hei = HEI.object.filter(Q(pic=line.get('pic', None))|
+                                        Q(euc=line.get('euc', None))|
+                                        Q(erc=line.get('erc', None))).first()
+                # Do we have a HEI?
+                if hei is None:
+                    errors.append(_(f'Wrong HEI on line {total}'))
+                    continue
+                # New or existing person?
+                person, new  = Person.objects.get_or_create(email=line['email'])
+                if new:
+                    person.first_name = line['first_name']
+                    person.last_name = line['last_name']
+                    person.managedBy = request.user
+                    person.save()
+                    new_persons.append(person.id)
+    
+                # We are good, create the Officer
+                officer, new  = Officer.objects.get_or_create(hei=hei,
+                                                              person=person)
+                if new:
+                    officer.manager = request.user
+                    officer.save()
+                    inserted += 1
+            # Data processed, how did it go...
+            # At least one officer inserted
+            if not inserted == 0:
+                self.message_user(request,
+                                  ngettext(f'{inserted} officer loaded',
+                                           f'{inserted} officers loaded',
+                                           inserted),
+                                  messages.SUCCESS)
+            # We can send the invites to those that have just been added
+            # to the system, asking for consent
+            for person in Person.objects.filter(id__in = new_persons):
+                person.invite(request.user, template='esiidm/officer_invite.txt')
+            # All went well, no errors
+            if len(errors) == 0:
+                return redirect('..')
+            for e in errors: 
+                self.message_user(request, e, messages.WARNING)
+        # Render the form
+        if len(errors) == 0:
+            # Get a fresh form
+            form = officerLoadForm()
+        context = dict(self.admin_site.each_context(request), form = form)
+        return TemplateResponse(request, 'esiidm/load_officers.html', context)
+
 
 @admin.register(StudentCard)
 class StudentCardAdmin(admin.ModelAdmin):
@@ -345,6 +554,126 @@ class StudentCardAdmin(admin.ModelAdmin):
         if not change and obj.manager is None:
             obj.manager = request.user
         super().save_model(request, obj, form, change)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        urls.insert(0, path('card_load/',
+                    self.admin_site.admin_view(self.load_cards)))
+        return urls
+
+    def load_cards(self, request):
+        """
+        A view for loading student cards.
+        Only officers can load cards for the HEIs the manage.
+        Cards are uploaded in CSV format with a minimum set of fields:
+            - esi : contains the student specific part of the ESI
+            - first_name : student's given name
+            - last_name : student's family name
+            - email : student's email
+        Optional fields:
+            - identifier : government issued identifier for the student
+            - operation : if present, value MUST (RFC 2119) be either:
+                D for deleting the card if it belongs to the student
+                C for creating a new card, this is the default if absent
+        Persons are created as needed and recive an invitation over email
+        requesting consent.
+        """
+    
+        user = request.user
+        if not request.user.is_officer: 
+            return HttpResponseForbidden(_('Access not permitted'))
+        # Once we are clear, the user can use and the method is right, let's work
+        errors = []
+        if request.method == 'POST':
+            # Process the form
+            form = cardLoadForm(request.POST, request.FILES)
+            #if not form.is_valid():
+            #    return render(request, 'esiidm/load_cards.html', {'form': form})
+            # Most common use case is just one HEI for an officer
+            hei = form.cleaned_data.get('hei', None)
+            # If we get e HEI id, it MUST exist, if not, explode mercilessly
+            hei = get_object_or_404(HEI, id=hei) if hei is not None else user.myHEI
+            # Officers MUST manage the HEI
+            officer = user.manages.filter(hei=hei).first()
+            # If officer is None, something smells fishy, explode
+            if officer is None: 
+                return HttpResponseForbidden(_('Access not permitted'))
+            data = request.FILES['data']
+            data.seek(0)
+            lines = csv.DictReader(io.StringIO(data.read().decode('utf-8')))
+            # There must be at least one line and it must contain the required fields
+            # And the load operation has to succeed for the whole file
+            total = 1
+            cards = 0
+            deleted = 0
+            new_persons = []
+            new_cards = []
+            with transaction.atomic():
+                try:
+                    for line in lines:
+                        esi = line.get('esi', None)
+                        email = line.get('email', None)
+                        first_name = line.get('first_name', None)
+                        last_name = line.get('last_name', None)
+                        # If any required field is missing, abort
+                        if ( esi in (None, '') or
+                             email in (None, '') or
+                             first_name in (None, '') or
+                             last_name in (None, '')):
+                            total += 1
+                            errors.append(_(f'Missing data on line {total}: {line}'))
+                        opcode = line.get('operation','C')
+                        if opcode not in ['C', 'D']:
+                            total += 1
+                            errors.append(_(f'Bad operation {opcode} on line {total}'))
+                        if opcode == 'C':
+                            person, new = Person.objects.get_or_create(email=email)
+                            if new:
+                                person.first_name = first_name
+                                person.last_name = last_name
+                                person.managedBy = user
+                                person.save()
+                                new_persons.append(person.pk)
+                            card, newcard = StudentCard.objects.get_or_create(
+                                                                   person = person,
+                                                                   hei = hei,
+                                                                   esi = esi)
+                            # Cards will be assigned to the officer loading them
+                            # this eases the process for transfering control of
+                            # existing cards by just reloading the transferred ones
+                            card.manager = officer
+                            card.save()
+                            # We make a note of newly created cards
+                            # for persons that were already known to the system
+                            if newcard and not newperson: new_cards.append(card.pk)
+                            total += 1
+                    # Data had problems, raise an exception, forcing a roll back
+                    if not len(errors) == 0:
+                        raise RuntimeError(_('Data has errors'))
+                except RuntimeError as error: 
+                    for e in errors: 
+                        self.message_user(request, e, messages.ERROR)
+            # Transactional part succeeded
+            # Lines processed are total minus the header
+            total -= 1
+            if not total == 0:
+                self.message_user(request,
+                                  ngettext(f'{total} line processed',
+                                           f'{total} lines processed',
+                                           total),
+                                  messages.SUCCESS)
+            # We can send the invites to those that have just been added
+            # to the system, asking for consent
+            for person in Person.objects.filter(id__in = new_persons):
+                person.invite(request.user, hei=hei)
+        # Render the form
+        if len(errors) == 0:
+            # Get a fresh form
+            form = heiLoadForm()
+        context = dict(self.admin_site.each_context(request), form = form)
+        return TemplateResponse(request, 'esiidm/load_cards.html', context)
+
+
 
 @admin.register(IdSource)
 class IdSourceAdmin(admin.ModelAdmin):

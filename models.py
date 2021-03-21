@@ -11,11 +11,12 @@
 >>>>>>> f9b7c3d (First version of models)
 from django.db import models
 from django.conf import settings
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import EmailMessage
 from django.core.signing import TimestampSigner
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
 from django.utils import timezone
+from django.template.loader import render_to_string
 from django_countries.fields import CountryField
 from django.contrib.auth.models import AbstractUser
 AbstractUser._meta.get_field('email')._unique = True
@@ -56,6 +57,11 @@ class Person(AbstractUser):
                                       auto_now = True,
                                       db_index = True,
                                       editable = False)
+    InvitedOn = models.DateTimeField(verbose_name = _('Invited on'),
+                                     null = True,
+                                     blank = True,
+                                     db_index = True,
+                                     editable = False)
     acceptedOn = models.DateTimeField(verbose_name = _('Accepted on'),
                                       null = True,
                                       blank = True,
@@ -88,6 +94,7 @@ class Person(AbstractUser):
     def has_accepted(self):
         return self.acceptedOn is not None
 
+    @property
     def myHEI(self):
         # The most common use case is "one Person <-> one HEI", 
         # so we return the first HEI
@@ -101,7 +108,6 @@ class Person(AbstractUser):
         # List of HEIs the person is an Officer for
         heis = [o.hei.id for o in self.manages.all()]
         return HEI.objects.filter(id__in=heis)
-
 
     def save(self, *args, **kwargs):
         """
@@ -125,7 +131,48 @@ class Person(AbstractUser):
         # we cannot delete the person
         if not self.is_student: return
         super(Person, self).delete(*args, **kwargs)
-            
+
+    def invite(self, manager, hei=None, subject=None,
+               template='esiidm/student_invite.txt'):
+        """
+        Send an invitation with a personalised time limited link.
+        The attribute value obtained from the IdSource used for accessing
+        the aceptance view will be linked to this person as
+        a verified Identifier.
+        - manager : is the person that is creating the invitation.
+        - subject : an alternative subject, just in case
+        - hei : A HEI object, if we wnat the message to be in its name
+        """
+        signer = TimestampSigner()
+        context = {
+                    'who': '{} {}'.format(sef.first_name, sefl.last_name),
+                    'manager': manager,
+                    'hei': hei,
+                    'host': settings.ALLOWED_HOSTS[0],
+                    'link': reverse('esiidm:accept',
+                                    kwargs={'otp': signer.sign(self.otp)}),
+                  }
+        msg = EmailMessage()
+        msg.to = [f'"{self.first_name} {self.last_name}" <{self.email}>']
+        msg.from_email = f'"{manager.first_name} {manager.last_name}" <>'
+        if hei is not None:
+            msg.from_email = f'"{hei.name}" <>'
+        msg.subject = subject
+        if subject is None:
+            msg.subject = _('Consent is required for the Student Card System')
+        # Replies should go to the inviting person
+        msg.reply_to = [f'"{manager.first_name} {manager.last_name}" <>']
+        msg.extra_headers = {'Message-Id': '{}@esiidm'.format(uuid.uuid4()}
+        msg.body = render_to_string(template, context=context)
+        try:
+            msg.send()
+            self.invitedOn = timezone.now()
+            self.save()
+            return True
+        except:
+            # Invite could not be sent
+            return False
+
 
 class IdSource(models.Model):
     """
@@ -229,7 +276,7 @@ class HEI(models.Model):
                 (7,_('July')),
                 (8,_('August')),
                 (9,_('September')),
-                (11,_('October')),
+                (10,_('October')),
                 (11,_('November')),
                 (12,_('December'))
              ]
