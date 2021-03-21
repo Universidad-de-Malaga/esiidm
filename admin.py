@@ -3,6 +3,7 @@
 # $Id$
 
 from django.contrib import admin
+from django.contrib import messages
 from django.template.response import TemplateResponse
 from django.urls import path
 from django.db.models import Q
@@ -13,6 +14,9 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.http import HttpResponseForbidden
 from django.conf import settings
+
+import csv
+import io
 
 # Register your models here.
 from .models import HEI, Person, Officer, StudentCard, IdSource, Identifier
@@ -257,10 +261,10 @@ class HEIAdmin(admin.ModelAdmin):
             - euc : HEI EUC code
             - erc : HEI Erasmus code
             - sho : SCHAC Home Organization (HEI Internet domain)
+            - manager : email address for the main HEI officer
         Optional fields:
             - url : HEI main web page
             - termstart : month when term starts (1 through 12)
-            - manager : email address for the main HEI officer
         """
     
         user = request.user
@@ -294,24 +298,33 @@ class HEIAdmin(admin.ModelAdmin):
                     e = _(f'Manager {manager_mail} in line {total} does not exist')
                     errors.append(e)
                     continue
-                # We are good, create the HEI if it does not exist
-                hei, new  = HEI.objects.get_or_create(pic=line['pic'],
-                                                      euc=line['euc'],
-                                                      erc=line['erc'])
-                if not new:
+                # We are good, chech if the HEI exists
+                hei  = HEI.objects.filter(pic=line['pic'],
+                                          euc=line['euc'],
+                                          erc=line['erc']).first()
+                if hei is not None:
                     e = _(f'{hei} already exists in line {total}')
                     errors.append(e)
                     continue
-                hei.manager = manager
+                hei = HEI()
+                hei.pic = line['pic']
+                hei.euc = line['euc']
+                hei.erc = line['erc']
+                hei.managedBy = manager
                 hei.name = line['name']
                 hei.country = line['country']
                 hei.sho = line['sho']
                 hei.url = line.get('url', '')
                 hei.termstart = line.get('termstart',
-                                         settings.__dict__.get('TERM_START', 9))
+                                         settings.__dict__.get('TERM_START',9))
                 try:
                     hei.save()
                     inserted += 1
+                    # We have to promote the person to officer level for HEI
+                    # It should not exist, as we are creating the HEI
+                    officer, n = Officer.objects.get_or_create(hei=hei,
+                                                               person=manager,
+                                                               manager=user)
                 except:
                     e = _(f'{hei} in line {total} not saved. Existing data.')
                     errors.append(e)
@@ -476,7 +489,8 @@ class OfficerAdmin(admin.ModelAdmin):
     
                 # We are good, create the Officer
                 officer, new  = Officer.objects.get_or_create(hei=hei,
-                                                              person=person)
+                                                              person=person,
+                                                              manager=user)
                 if new:
                     officer.manager = request.user
                     officer.save()

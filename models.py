@@ -162,7 +162,7 @@ class Person(AbstractUser):
             msg.subject = _('Consent is required for the Student Card System')
         # Replies should go to the inviting person
         msg.reply_to = [f'"{manager.first_name} {manager.last_name}" <>']
-        msg.extra_headers = {'Message-Id': '{}@esiidm'.format(uuid.uuid4()}
+        msg.extra_headers = {'Message-Id': '{}@esiidm'.format(uuid.uuid4())}
         msg.body = render_to_string(template, context=context)
         try:
             msg.send()
