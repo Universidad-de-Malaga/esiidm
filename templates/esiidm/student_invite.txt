@@ -1,0 +1,18 @@
+
+{{ who }}
+
+Your consent is requited for being included in our system as a student
+for getting a student card of
+
+{{ hei.name }}
+
+To review the data and give consent or refuse, please visit
+
+https://{{ host }}{{ link }}
+
+This link is valid for 24 hours.
+
+You will need to authenticate using any of the methods that will be offered.
+
+Thank you.
+

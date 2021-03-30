@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.template.response import TemplateResponse
 from django.urls import path
 from django.db.models import Q
+from django.db import transaction
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ngettext
 from django.shortcuts import render
@@ -15,12 +16,49 @@ from django.shortcuts import redirect
 from django.http import HttpResponseForbidden
 from django.conf import settings
 
+from .utils import get_setting
+
 import csv
 import io
 
 # Register your models here.
 from .models import HEI, Person, Officer, StudentCard, IdSource, Identifier
 from .forms import cardLoadForm, heiLoadForm, officerLoadForm
+
+###########################
+# Filters
+###########################
+class HasAcceptedListFilter(admin.SimpleListFilter):
+    title = _('Has accepted')
+    parameter_name = 'hasaccepted'
+
+    def lookups(self, request, mdl):
+        return (('True', _('Yes')), ('False',_('No')))
+
+    def queryset(self, request, queryset):
+        if self.value():
+            # We need to reverse the meaning as we are looking for nulls
+            # so hasaccepted is true when acceptedOn is NOT null
+            what = self.value() == 'False'
+            return queryset.filter(acceptedOn__isnull=what)
+        else:
+            return queryset
+
+class IsInvitedListFilter(admin.SimpleListFilter):
+    title = _('Is Invited')
+    parameter_name = 'isinvited'
+
+    def lookups(self, request, mdl):
+        return (('True', _('Yes')), ('False',_('No')))
+
+    def queryset(self, request, queryset):
+        if self.value():
+            # We need to reverse the meaning as we are looking for nulls
+            # so isinvited is true when invitedOn is NOT null
+            what = self.value() == 'False'
+            return queryset.filter(invitedOn__isnull=what)
+        else:
+            return queryset
 
 class CountryListFilter(admin.SimpleListFilter):
     title = 'Country'
@@ -44,15 +82,15 @@ class IdentifierInline(admin.TabularInline):
     hidden_fields = ('id')
 
     def has_view_permission(self, request, obj=None):
-        if not super(IdentifierAdmin, self).has_view_permission(request, obj):
+        if not super(IdentifierInline, self).has_view_permission(request, obj):
             return False
         if obj is None : return True
         # Not even superusers should view Identifiers for
         # Persons they do not manage
-        if obj is not None and request.user.id == obj.person.managedBy.id:
+        if obj is not None and request.user.id == obj.managedBy.id:
             return True
         # Persons with admin privileges can view their data
-        if obj is not None and request.user.id == obj.person.id:
+        if obj is not None and request.user.id == obj.id:
             return True
         return False
 
@@ -61,13 +99,51 @@ class IdentifierInline(admin.TabularInline):
         return False
 
 
+###########################
+# Actions
+###########################
+def send_invites(modeladmin, request, queryset):
+    """
+    Resend invitations to the selected persons
+    """
+    for person in queryset:
+        if person.is_superuser:
+            template = 'esiidm/super_invite.txt'
+            hei = None
+        elif person.is_officer:
+            template = 'esiidm/officer_invite.txt'
+            # Persons consent when they are inserted for the first HEI
+            hei = person.myHEI
+        else:
+            # Person is a student
+            template = 'esiidm/student_invite.txt'
+            # Persons consent when they are inserted for the first HEI
+            hei = person.myHEI
+        host = get_setting('MAIL_ORIGIN_DOMAIN',
+                           request.get_host().split(':')[0])
+        result = person.invite(person.managedBy, hei=hei,
+                               host=host, template=template)
+        if not result:
+            modeladmin.message_user(
+                            request,
+                            _(f'Could not send message to {person.email}'),
+                            messages.WARNING)
+send_invites.short_description = _('Send invite to selected persons')
+
+
+###########################
+# Model admins
+###########################
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
-    #list_filter = ['has_accepted']
+    list_filter = [ HasAcceptedListFilter, IsInvitedListFilter ]
     search_fields = ['email', 'identifier', 'last_name']
     list_display_links = ['email', 'identifier', 'last_name']
-    list_display = ['email', 'identifier', 'last_name', 'has_accepted']
+    list_display = ['email', 'identifier', 'last_name', 'has_accepted',
+                    'is_officer', 'is_superuser']
+    readonly_fields = ['acceptedOn', 'invitedOn', 'last_login', 'date_joined']
     inlines = [ IdentifierInline ]
+    actions = [ send_invites ]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj=None, **kwargs)
@@ -131,11 +207,11 @@ class PersonAdmin(admin.ModelAdmin):
             kwargs["queryset"] = Person.objects.filter(is_staff=True)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = []
-        if not request.user.is_superuser and request.user.is_officer:
-            readonly_fields = []
-        return readonly_fields
+    #def get_readonly_fields(self, request, obj=None):
+    #    readonly_fields = []
+    #    if not request.user.is_superuser and request.user.is_officer:
+    #        readonly_fields = []
+    #    return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
         # Adapt the field sets depending on who's managing the person
@@ -158,7 +234,9 @@ class PersonAdmin(admin.ModelAdmin):
                                                  'fields': ['user_permissions',
                                                             'groups']}))
             fieldsets.append((_('Administrivia'), {'classes': ('collapse',),
-                                                   'fields': [('last_login',
+                                                   'fields': [('invitedOn',
+                                                               'acceptedOn',
+                                                               'last_login',
                                                                'date_joined')
                                                              ]}))
         return fieldsets
@@ -170,7 +248,6 @@ class HEIAdmin(admin.ModelAdmin):
     search_fields = ['name', 'pic', 'euc', 'sho']
     list_display = ['name', 'pic', 'sho', 'url', 'erc']
     list_display_links = ['name', 'pic', 'sho']
-    #change_list_template = 'esiidm/hei_changelist.html'
 
     def has_view_permission(self, request, obj=None):
         if not super(HEIAdmin, self).has_view_permission(request, obj):
@@ -316,7 +393,7 @@ class HEIAdmin(admin.ModelAdmin):
                 hei.sho = line['sho']
                 hei.url = line.get('url', '')
                 hei.termstart = line.get('termstart',
-                                         settings.__dict__.get('TERM_START',9))
+                                         get_setting('TERM_START',9))
                 try:
                     hei.save()
                     inserted += 1
@@ -325,6 +402,10 @@ class HEIAdmin(admin.ModelAdmin):
                     officer, n = Officer.objects.get_or_create(hei=hei,
                                                                person=manager,
                                                                manager=user)
+                    # and grant access to the admin pages
+                    if not manager.is_staff:
+                        manager.is_staff = True
+                        manager.save()
                 except:
                     e = _(f'{hei} in line {total} not saved. Existing data.')
                     errors.append(e)
@@ -359,7 +440,6 @@ class OfficerAdmin(admin.ModelAdmin):
     list_display = ['person',]
     list_display_links = ['person',]
     fieldsets = [(None, {'fields': [('person', 'hei'), 'manager']})]
-    #change_list_template = 'esiidm/officer_changelist.html'
 
     def has_view_permission(self, request, obj=None):
         if not super(OfficerAdmin, self).has_view_permission(request, obj):
@@ -471,9 +551,9 @@ class OfficerAdmin(admin.ModelAdmin):
                         errors_in_line = True
                         errors.append(_(f'Field {field} missing on line {total}'))
                 if errors_in_line: continue
-                hei = HEI.object.filter(Q(pic=line.get('pic', None))|
-                                        Q(euc=line.get('euc', None))|
-                                        Q(erc=line.get('erc', None))).first()
+                hei = HEI.objects.filter(Q(pic=line.get('pic', None))|
+                                         Q(euc=line.get('euc', None))|
+                                         Q(erc=line.get('erc', None))).first()
                 # Do we have a HEI?
                 if hei is None:
                     errors.append(_(f'Wrong HEI on line {total}'))
@@ -484,15 +564,15 @@ class OfficerAdmin(admin.ModelAdmin):
                     person.first_name = line['first_name']
                     person.last_name = line['last_name']
                     person.managedBy = request.user
+                    new_persons.append((person, hei))
+                if new or not person.is_staff:
+                    person.is_staff = True
                     person.save()
-                    new_persons.append(person.id)
     
-                # We are good, create the Officer
-                officer, new  = Officer.objects.get_or_create(hei=hei,
-                                                              person=person,
-                                                              manager=user)
+                # We are good, create the Officer if it does not exist
+                new = not Officer.objects.filter(hei=hei,person=person).exists()
                 if new:
-                    officer.manager = request.user
+                    officer = Officer(hei=hei, person=person, manager=user)
                     officer.save()
                     inserted += 1
             # Data processed, how did it go...
@@ -503,10 +583,23 @@ class OfficerAdmin(admin.ModelAdmin):
                                            f'{inserted} officers loaded',
                                            inserted),
                                   messages.SUCCESS)
+            # Person objects created
+            newpersons = len(new_persons)
+            if not newpersons == 0:
+                self.message_user(request,
+                                  ngettext(f'{newpersons} person created',
+                                           f'{newpersons} persons created',
+                                           newpersons),
+                                  messages.SUCCESS)
             # We can send the invites to those that have just been added
             # to the system, asking for consent
-            for person in Person.objects.filter(id__in = new_persons):
-                person.invite(request.user, template='esiidm/officer_invite.txt')
+            for person in new_persons:
+                result = person[0].invite(request.user,
+                                          host=request.get_host(),
+                                          hei=person[1],
+                                          template='esiidm/officer_invite.txt')
+                if not result:
+                    errors.append(_(f'Message to {person[0].email} not sent'))
             # All went well, no errors
             if len(errors) == 0:
                 return redirect('..')
@@ -589,7 +682,7 @@ class StudentCardAdmin(admin.ModelAdmin):
             - operation : if present, value MUST (RFC 2119) be either:
                 D for deleting the card if it belongs to the student
                 C for creating a new card, this is the default if absent
-        Persons are created as needed and recive an invitation over email
+        Persons are created as needed and receive an invitation over email
         requesting consent.
         """
     
@@ -601,10 +694,9 @@ class StudentCardAdmin(admin.ModelAdmin):
         if request.method == 'POST':
             # Process the form
             form = cardLoadForm(request.POST, request.FILES)
-            #if not form.is_valid():
-            #    return render(request, 'esiidm/load_cards.html', {'form': form})
             # Most common use case is just one HEI for an officer
-            hei = form.cleaned_data.get('hei', None)
+            #hei = form.cleaned_data.get('hei', None)
+            hei = None
             # If we get e HEI id, it MUST exist, if not, explode mercilessly
             hei = get_object_or_404(HEI, id=hei) if hei is not None else user.myHEI
             # Officers MUST manage the HEI
@@ -637,6 +729,7 @@ class StudentCardAdmin(admin.ModelAdmin):
                             total += 1
                             errors.append(_(f'Missing data on line {total}: {line}'))
                         opcode = line.get('operation','C')
+                        if opcode is None or opcode.strip() == '': opcode = 'C'
                         if opcode not in ['C', 'D']:
                             total += 1
                             errors.append(_(f'Bad operation {opcode} on line {total}'))
@@ -648,10 +741,17 @@ class StudentCardAdmin(admin.ModelAdmin):
                                 person.managedBy = user
                                 person.save()
                                 new_persons.append(person.pk)
-                            card, newcard = StudentCard.objects.get_or_create(
-                                                                   person = person,
-                                                                   hei = hei,
-                                                                   esi = esi)
+                            # There MUST be one card per person per hei and esi
+                            card = StudentCard.objects.filter(student = person,
+                                                              hei = hei,
+                                                              esi = esi).first()
+                            newcard = False
+                            if card is None:
+                                newcard = True
+                                card = StudentCard()
+                                card.student = person
+                                card.hei = hei
+                                card.esi = esi
                             # Cards will be assigned to the officer loading them
                             # this eases the process for transfering control of
                             # existing cards by just reloading the transferred ones
@@ -659,8 +759,17 @@ class StudentCardAdmin(admin.ModelAdmin):
                             card.save()
                             # We make a note of newly created cards
                             # for persons that were already known to the system
-                            if newcard and not newperson: new_cards.append(card.pk)
+                            if newcard and not new: new_cards.append(card.pk)
                             total += 1
+                        if opcode == 'D':
+                            # There MUST be one card per person per hei and esi
+                            card = StudentCard.objects.filter(hei = hei,
+                                                              esi = esi).first()
+                            if card is None:
+                                errors.append(_(f'Card not found on line {total}'))
+                                continue
+                            card.delete()
+                            deleted += 1
                     # Data had problems, raise an exception, forcing a roll back
                     if not len(errors) == 0:
                         raise RuntimeError(_('Data has errors'))
@@ -670,16 +779,36 @@ class StudentCardAdmin(admin.ModelAdmin):
             # Transactional part succeeded
             # Lines processed are total minus the header
             total -= 1
-            if not total == 0:
-                self.message_user(request,
-                                  ngettext(f'{total} line processed',
-                                           f'{total} lines processed',
-                                           total),
-                                  messages.SUCCESS)
             # We can send the invites to those that have just been added
             # to the system, asking for consent
+            host = get_setting('MAIL_ORIGIN_DOMAIN',
+                               request.get_host().split(':')[0])
             for person in Person.objects.filter(id__in = new_persons):
-                person.invite(request.user, hei=hei)
+                result = person.invite(request.user, hei=hei, host=host)
+                if not result:
+                    errors.append(_(f'Message to {person.email} not sent'))
+            if not total == 0:
+                if not len(new_persons) == 0:
+                    npersons = len(new_persons)
+                    self.message_user(request,
+                                      ngettext(f'{npersons} person added',
+                                               f'{npersons} persons added',
+                                               npersons),
+                                      messages.SUCCESS)
+                if not len(new_cards) == 0 or not len(new_persons) == 0:
+                    # Cards are added for existing and new persons
+                    ncards = len(new_cards) + len(new_persons)
+                    self.message_user(request,
+                                      ngettext(f'{ncards} card added',
+                                               f'{ncards} cards added',
+                                               ncards),
+                                      messages.SUCCESS)
+                if not deleted == 0:
+                    self.message_user(request,
+                                      ngettext(f'{deleted} card deleted',
+                                               f'{deleted} cards deleted',
+                                               deleted),
+                                      messages.SUCCESS)
         # Render the form
         if len(errors) == 0:
             # Get a fresh form

@@ -13,6 +13,7 @@ from django.db import models
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.core.signing import TimestampSigner
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
 from django.utils import timezone
@@ -25,6 +26,8 @@ from urllib import parse
 import uuid
 import requests
 import calendar
+
+from .utils import get_setting
 
 # Create your models here.
 
@@ -57,20 +60,18 @@ class Person(AbstractUser):
                                       auto_now = True,
                                       db_index = True,
                                       editable = False)
-    InvitedOn = models.DateTimeField(verbose_name = _('Invited on'),
+    invitedOn = models.DateTimeField(verbose_name = _('Invited on'),
                                      null = True,
                                      blank = True,
-                                     db_index = True,
-                                     editable = False)
+                                     db_index = True)
     acceptedOn = models.DateTimeField(verbose_name = _('Accepted on'),
                                       null = True,
                                       blank = True,
-                                      db_index = True,
-                                      editable = False)
+                                      db_index = True)
 
     # It is possible to override the defaults in settings.py
-    USERNAME_FIELD = settings.__dict__.get('PERSON_USERNAME_FIELD', 'email')
-    REQUIRED_FIELDS = settings.__dict__.get('PERSON_REQUIRED_FIELDS', [])
+    USERNAME_FIELD = get_setting('PERSON_USERNAME_FIELD', 'email')
+    REQUIRED_FIELDS = get_setting('PERSON_REQUIRED_FIELDS', [])
 
     class Meta:
         verbose_name = _('Person')
@@ -93,6 +94,14 @@ class Person(AbstractUser):
     @property
     def has_accepted(self):
         return self.acceptedOn is not None
+
+    @property
+    def is_pending(self):
+        return self.acceptedOn is None and self.invitedOn is not None
+
+    @property
+    def is_invited(self):
+        return self.invitedOn is not None
 
     @property
     def myHEI(self):
@@ -133,6 +142,7 @@ class Person(AbstractUser):
         super(Person, self).delete(*args, **kwargs)
 
     def invite(self, manager, hei=None, subject=None,
+               host=settings.ALLOWED_HOSTS[0],
                template='esiidm/student_invite.txt'):
         """
         Send an invitation with a personalised time limited link.
@@ -145,23 +155,26 @@ class Person(AbstractUser):
         """
         signer = TimestampSigner()
         context = {
-                    'who': '{} {}'.format(sef.first_name, sefl.last_name),
+                    'who': '{} {}'.format(self.first_name, self.last_name),
                     'manager': manager,
                     'hei': hei,
-                    'host': settings.ALLOWED_HOSTS[0],
+                    'host': host,
                     'link': reverse('esiidm:accept',
                                     kwargs={'otp': signer.sign(self.otp)}),
                   }
         msg = EmailMessage()
         msg.to = [f'"{self.first_name} {self.last_name}" <{self.email}>']
-        msg.from_email = f'"{manager.first_name} {manager.last_name}" <>'
+        msg.from_email = '{} {} <no-reply@{}>'.format(manager.first_name,
+                                                      manager.last_name,
+                                                      host)
         if hei is not None:
-            msg.from_email = f'"{hei.name}" <>'
-        msg.subject = subject
-        if subject is None:
-            msg.subject = _('Consent is required for the Student Card System')
+            msg.from_email = f'"{hei.name}" <no-reply@{host}>'
+        msg.subject = _('Consent is required for the Student Card System')
+        if subject is not None: msg.subject = subject
         # Replies should go to the inviting person
-        msg.reply_to = [f'"{manager.first_name} {manager.last_name}" <>']
+        msg.reply_to = ['"{} {}" <{}>'.format(manager.first_name,
+                                              manager.last_name,
+                                              manager.email)]
         msg.extra_headers = {'Message-Id': '{}@esiidm'.format(uuid.uuid4())}
         msg.body = render_to_string(template, context=context)
         try:
@@ -176,26 +189,46 @@ class Person(AbstractUser):
 
 class IdSource(models.Model):
     """
-    A class for defining authetication sources
+    A class for managing authentication sources.
+    It is designed for offering a simple interface to display information
+    about available authentication sources in the system and an easy way
+    for activating and deactivating them.
     The relevant attributes for objects of this class are:
     - Source: a string that identifies the source in the system
     - Attribute: the attribute providing the value that links to a person
     - Extractor: a regular expression for extracting the value that
                  will be used to identify a given individual
+    - Active: If the source is active or not
+    - Name: Name of the authentication module for the source
+            It is an index for a class dictionary loaded at start
+            from the authentication package
     """
 
+    name = models.CharField(max_length = 10,
+                            db_index = True,
+                            unique = True,
+                            editable = False,
+                            verbose_name = _('Authentication class name'))
     source = models.CharField(max_length = 100,
-                                  db_index = True,
-                                  unique = True,
-                                  verbose_name = _('Source name'))
+                              db_index = True,
+                              unique = True,
+                              editable = False,
+                              verbose_name = _('Source name'))
     attribute = models.CharField(max_length = 100,
                                  db_index = True,
+                                 editable = False,
                                  verbose_name = _('Attribute name'))
     extractor = models.CharField(max_length = 200,
                                  default = '.*',
+                                 editable = False,
                                  verbose_name = _('Extractor'),
                                  help_text = _(
                                  'Regular expression for extracting the value.'))
+    active = models.BooleanField(default=True,
+                                 db_index = True,
+                                 verbose_name = _('Active'),
+                                 help_text = _('Is the source active?'))
+
 
     # Control data
     createdOn = models.DateTimeField(verbose_name = _('Created on'),
@@ -211,7 +244,7 @@ class IdSource(models.Model):
         verbose_name = _('Authentication source')
         verbose_name_plural = _('Authentication sources')
         index_together = ['source', 'attribute']
-        ordering = ['source', 'attribute']
+        ordering = ['active', 'source', 'attribute']
         constraints = [
             models.UniqueConstraint(fields=['source', 'attribute'],
                                     name='one_attribute_per_source'),
@@ -234,10 +267,10 @@ class Identifier(models.Model):
                                related_name = 'identifiers',
                                related_query_name = 'person_identifiers',
                                verbose_name = _('Person'))
-    value = models.CharField(max_length = 100,
+    value = models.CharField(max_length = 128,
                              db_index = True,
                              editable = False,
-                             verbose_name = _('Identifier value'))
+                             verbose_name = _('Identifier value hash'))
 
     # Control data
     createdOn = models.DateTimeField(verbose_name = _('Created on'),
@@ -377,7 +410,7 @@ class HEI(models.Model):
         """
         # The machine ID is used by ESC in case there are more than system
         # producing ESC cards for an instituion, usually it is just one
-        machineId = settings.__dict__.get('MACHINEID','001')
+        machineId = get_setting('MACHINEID','001')
         return str(uuid.uuid1(node=int('{}{}'.format(machineId,
                                                      self.pic), 10)))
 
@@ -413,11 +446,11 @@ class HEI(models.Model):
         headers = {'Content-Type': 'application/json',
                    'key': self.productionKey }
 
-        base_url = settings.__dict__.get('ESCROUTER_BASE_URL', None)
+        base_url = get_setting('ESCROUTER_BASE_URL', None)
 
         # If the system or the HEI is not yet in production, use the sandbox
         if not base_url or not self.productionKey:
-            base_url = settings.__dict__.get('ESCROUTER_SANDBOX_URL', None)
+            base_url = get_setting('ESCROUTER_SANDBOX_URL', None)
             if not base_url or not self.sandboxKey:
                 # If the HEI is not connected to the ESC Router, do no harm
                 if operation == 'GET': return None
@@ -434,7 +467,7 @@ class HEI(models.Model):
             r = requests.get(
                     parse.urljoin(base_url, esi),
                     headers = headers,
-                    timeout = settings.__dict__.get(ESCROUTER_TIME_OUT,1)
+                    timeout = get_setting('ESCROUTER_TIME_OUT',1)
                 )
             if r.status_code == 200: return r.json()
 
@@ -446,7 +479,7 @@ class HEI(models.Model):
                     parse.urljoin(base_url, esi),
                     headers = headers,
                     json = json,
-                    timeout = settings.__dict__.get(ESCROUTER_TIME_OUT,1)
+                    timeout = get_setting('ESCROUTER_TIME_OUT',1)
                 )
             return r
 
@@ -458,7 +491,7 @@ class HEI(models.Model):
                 json = {'europeanStudentCardNumber': esc,
                         'cardType': 1},
             r = requests.post(base_url, headers = headers, json = json,
-                    timeout = settings.__dict__.get(ESCROUTER_TIME_OUT,1))
+                    timeout = get_setting('ESCROUTER_TIME_OUT',1))
             return r
 
         if operation == 'DELETE':
@@ -471,7 +504,7 @@ class HEI(models.Model):
                 # Delete a student
                 base_url = parse.urljoin(base_url, esi)
             r = requests.post(base_url, headers = headers,
-                    timeout = settings.__dict__.get(ESCROUTER_TIME_OUT,1))
+                    timeout = get_setting('ESCROUTER_TIME_OUT',1))
             return r
 
         # If we reach here, better return None
@@ -482,7 +515,7 @@ class Officer(models.Model):
     """A class for linking persons to the institutions they manage"""
 
     person = models.ForeignKey(Person,
-                               on_delete = models.DO_NOTHING,
+                               on_delete = models.CASCADE,
                                db_index = True, 
                                related_name = 'manages',
                                related_query_name = 'manage',
@@ -642,11 +675,10 @@ class StudentCard(models.Model):
         in MyAcademicId (URN) format if myacid is True
             urn:schac:PersonalUniqueCode:scope:identifier
         """
-        code = 'urn:schac:PersonalUniqueCode:int:{}:{}'.format(self.hei.sho,
-                                                               self.esi)
+        code = f'urn:schac:PersonalUniqueCode:int:esi:{self.hei.sho}:{self.esi}'
         if myacid:
             return code
-        return '{}-{}-{}'.format(self.hei.country.code, self.hei.pic, self.esi)
+        return f'{self.hei.country.code}-{self.hei.pic}-{self.esi}'
 
     def expires(self):
         """
