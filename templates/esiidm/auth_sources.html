@@ -1,0 +1,24 @@
+{% extends base.html %}
+{% load i18n %}
+
+{% block content %}
+<h3>
+{% blocktranslate %}
+Please, select one of the following authentication methods
+{% endblocktranslate %}
+</h3>
+
+  <ul>
+  {% for source in sources %}
+    <li>
+      <a href="{% url esiidm:authn source %}">
+        {% translate source.description %}
+      </a>
+    </li>
+  {% endfor %}
+  </ul>
+{% endblock %}
+{% comment %}
+vim:ts=2:expandtab:ai
+$Id$
+{% endcomment %}

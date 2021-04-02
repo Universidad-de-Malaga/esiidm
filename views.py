@@ -6,7 +6,6 @@ from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.conf import settings
-from django.core.mail import EmailMessage
 from django.core.signing import TimestampSigner
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
@@ -38,7 +37,7 @@ def authenticate(request):
         sources = IdSource.objects.filter(active=True)
         return render(request, 'esiidm/auth_sources.html',
                       {'sources': sources})
-    if phase is 'login':
+    if phase == 'login':
         # We are back from an authentication source
         # The session may contain either a token or the id for the person
         person_id = request.session.get('person', None)
@@ -100,6 +99,7 @@ def accept(request, otp, response=None):
                                host=host, template=template)
         return render(request,'esiidm/expired.html', {'sent': result})
     except BadSignature:
+        request.session.flush()
         return HttpResponseForbidden()
     request.session['otp'] = otp
     # The OTP allows us to get the relevant user,
@@ -112,16 +112,17 @@ def accept(request, otp, response=None):
     attribute = request.session.get('authn_attribute', None)
     person = request.user
     if phase is None or source is None or attribute is None:
-    # Someone is messing with the session ...
+        # Someone is messing with the session ...
         return HttpResponseForbidden
     if phase == 'link':
+        # We know how the person has authenticated, we can inform about it
+        idsource = get_object_or_404(IdSource, source=source)
         # We need to add an Identifier for the Person
         if response is None and not person.has_accepted:
             # The person has not consented yet
-            return render(request, 'esiidm/index.html', {'ask': True})
+            return render(request, 'esiidm/consent.html', {'source': source})
         if response == 'Y' or person.has_accepted:
             # We need a new identifier
-            idsource = get_object_or_404(IdSource, pk=source)
             identifier, new = Identifier(source=idsource,
                                          person=person,
                                          value=attribute)

@@ -109,6 +109,8 @@ class Person(AbstractUser):
         # so we return the first HEI
         if self.is_officer: return self.manages.first().hei
         if self.is_student: return self.cards.first().hei
+        # Just in case person is not associated to a certain HEI
+        return None
 
     @property
     def HEIs(self):
@@ -199,35 +201,40 @@ class IdSource(models.Model):
     - Extractor: a regular expression for extracting the value that
                  will be used to identify a given individual
     - Active: If the source is active or not
-    - Name: Name of the authentication module for the source
-            It is an index for a class dictionary loaded at start
-            from the authentication package
+    - Description: Descriptive information about the authentication source
     """
 
-    name = models.CharField(max_length = 10,
-                            db_index = True,
-                            unique = True,
-                            editable = False,
-                            verbose_name = _('Authentication class name'))
-    source = models.CharField(max_length = 100,
-                              db_index = True,
-                              unique = True,
-                              editable = False,
-                              verbose_name = _('Source name'))
-    attribute = models.CharField(max_length = 100,
-                                 db_index = True,
-                                 editable = False,
-                                 verbose_name = _('Attribute name'))
-    extractor = models.CharField(max_length = 200,
-                                 default = '.*',
-                                 editable = False,
-                                 verbose_name = _('Extractor'),
-                                 help_text = _(
-                                 'Regular expression for extracting the value.'))
-    active = models.BooleanField(default=True,
-                                 db_index = True,
-                                 verbose_name = _('Active'),
-                                 help_text = _('Is the source active?'))
+    source = models.CharField(
+                        max_length = 25,
+                        db_index = True,
+                        unique = True,
+                        editable = False,
+                        verbose_name = _('Source name'))
+    attribute = models.CharField(
+                           max_length = 100,
+                           default = 'ANY',
+                           db_index = True,
+                           editable = False,
+                           verbose_name = _('Attribute name'))
+    extractor = models.CharField(
+                           max_length = 200,
+                           default = '.*',
+                           editable = False,
+                           verbose_name = _('Extractor'),
+                           help_text = _(
+                              'Regular expression for extracting the value.'))
+    active = models.BooleanField(
+                           default = False,
+                           db_index = True,
+                           verbose_name = _('Active'),
+                           help_text = _('Is the source active?'))
+    description = models.CharField(
+                             max_length = 200,
+                             default = 'Authentication source',
+                             editable = False,
+              .              verbose_name = _('Description'),
+               .             help_text = _(
+                                'Authentication source description.'))
 
 
     # Control data
@@ -249,6 +256,9 @@ class IdSource(models.Model):
             models.UniqueConstraint(fields=['source', 'attribute'],
                                     name='one_attribute_per_source'),
         ]
+
+    def __str__(self):
+        return self.source
 
 
 class Identifier(models.Model):

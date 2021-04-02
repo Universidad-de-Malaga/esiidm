@@ -821,8 +821,9 @@ class StudentCardAdmin(admin.ModelAdmin):
 @admin.register(IdSource)
 class IdSourceAdmin(admin.ModelAdmin):
     search_fields = ['source', 'attribute',]
-    list_display = ['source', 'attribute', 'extractor']
+    list_display = ['source', 'attribute', 'extractor', 'description']
     list_editable = ['attribute', 'extractor']
     list_display_links = ['source', ]
-    fieldsets = [(None, {'fields': [('source', 'attribute'), 'extractor']})]
+    fieldsets = [(None, {'fields': [('source', 'attribute'), 'extractor',
+                                    'description']})]
 

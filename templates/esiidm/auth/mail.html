@@ -1,0 +1,32 @@
+{% extends base.html %}
+{% load i18n %}
+
+{% block content %}
+<form method="post">
+{% if phase == "ask" %}
+{% blocktranslate %}
+Please, enter your email address associated with the system, to recieve an
+access token.<br>
+It usually is the one in which you received a request for consent.<br>
+{% endblocktranslate %}
+{% endif %}
+{% if phase == "final" %}
+    {% if expired %}
+    {% blocktranslate %}
+    The token you used was expired. A new one has been sent.<br>
+    {% endblocktranslate %}
+    {% endif %}
+  {% blocktranslate %}
+  Please, enter the token you have received from the system.<br>
+  {% endblocktranslate %}
+  {% endif %}
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn btn-default" type="submit">{% translate OK %}</button>
+</form>
+{% endblock %}
+
+{% comment %}
+vim:ts=2:expandtab:ai
+$Id$
+{% endcomment %}

@@ -1,0 +1,44 @@
+{% extends base.html %}
+{% load i18n %}
+
+{% block content %}
+{% blocktranslate %}
+<h3>Welcome to the European Student Card and Identifier management system</h3>
+It is important the you consent that your personal information is processed
+in the system before using it.<br>
+This is what the system knows about you:<br>
+{% endblocktranslate %}
+<ul>
+  <li><strong>{% translate Name%}:</strong> {{ request.user.first_name }}</li>
+  <li><strong>{% translate Family name %}:</strong> {{ request.user.last_name }}</li>
+  <li><strong>{% translate Email %}:</strong> {{ request.user.email }}</li>
+  {% if request.user.identifier %}
+  <li><strong>{% translate Identifier %}:</strong> {{ request.user.identifier }}</li>
+  {% endif %}
+</ul>
+<p>
+{% blocktranslate %}
+Also, the system will create a link to the identification received vía
+{{ source.description }} but no extra personal information will be stored.
+{% endblocktranslate %}
+</p>
+<p>
+{% if request.user.is_student %}
+{% blocktranslate %}
+Do you agree with the information being stored to provide you with an European
+Student Card and Identifier?
+{% endblocktranslate %}
+{% else %}
+{% blocktranslate %}
+Do you agree with the information being stored to allow you access and
+manage the system?
+{% endblocktranslate %}
+{% endif %}
+</p>
+<a href="{% url esiidm:accept Y %}" class="btn btn-success">{% translate Yes %}</a>
+<a href="{% url esiidm:accept N %}" class="btn btn-danger">{% translate No %}</a>
+{% endblock %}
+{% comment %}
+vim:ts=2:expandtab:ai
+$Id$
+{% endcomment %}

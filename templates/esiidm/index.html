@@ -1,0 +1,49 @@
+{% extends base.html %}
+{% load i18n %}
+
+{% block content %}
+<h3>{% translate Welcome %}</h3>
+{% if request.user.is_staf %}
+{% blocktranslate %}
+You have permission to manage the system.<br>
+{% endblocktranslate %}
+<a href="{% url 'admin:index' %}">{% translate "link to admin panel" %}</a>
+{% endif %}
+{% if request.user.is_officer %}
+{% blocktranslate %}
+You can manage students for the following HEI:
+{% endblocktranslate %}
+<ul>
+  {% for hei in request.user.HEIs %}
+  <li>{{ hei }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% if request.user.is_student %}
+<emph>Test presentation</emph>
+{% for c in request.user.cards %}
+<table>
+  <tr>
+    <td>{{ c.hei.name }}</td>
+  </tr>
+  <tr>
+    <td>{{ c.student.first_name }} {{ c.student.last_name }}</td>
+  </tr>
+  <tr>
+    <td>Student Number:</td>
+    <td>{{ c.esi }}</td>
+  </tr>
+  <tr>
+    <td>Card Number:</td>
+    <td>{{ c.esc }}</td>
+  </tr>
+</table>
+<a href="https://router.europeanstudentcard.eu/svc-provider/{{ c.esc }}">Router link</a>
+{% endfor %}
+{% endif %}
+{% endblock %}
+
+{% comment %}
+vim:ts=2:expandtab:ai
+$Id$
+{% endcomment %}
