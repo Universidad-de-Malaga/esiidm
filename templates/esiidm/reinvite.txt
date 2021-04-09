@@ -1,0 +1,15 @@
+
+{{ who }}
+
+You have requested a link to add a new authetication method.
+
+To activate the new method, please visit
+
+https://{{ host }}{{ link }}
+
+This link is valid for 24 hours.
+
+To activate the new method, use it for autheticating to the system.
+
+Thank you.
+

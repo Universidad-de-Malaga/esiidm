@@ -14,10 +14,15 @@ Finally, show a form for entering the token the user should have received.
 """
 
 from django.shortcuts import render
+from django.shortcuts import redirect
+from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.core.signing import TimestampSigner
+from django.core.signing import SignatureExpired
+from django.core.signing import BadSignature
 from django.http import HttpResponseForbidden
+from django.urls import reverse
 from django import forms
 
 from esiidm.models import Person, IdSource
@@ -26,18 +31,18 @@ import uuid
 
 # Mandatory module attributes for the management interface
 # No attribute and no extractor regular expression
-souce_name = 'mail'
-source_attribute = 'No source, extractor is time duration'
+source_name = 'mail'
+source_attribute = _('No source, extractor is time duration')
 extractor = '5'
-description = 'Email token based authentication'
+description = _('Email token based authentication')
 
-def mailForm(froms.Form):
-    email = froms.EmailField(max_length=100)
+class mailForm(forms.Form):
+    email = forms.EmailField(max_length=100)
 
-def tokenForm(froms.Form):
-    token = froms.CharField(max_length=128)
+class tokenForm(forms.Form):
+    token = forms.CharField(max_length=128)
 
-def _sendtoken(person, token, host, url, time=int(extractor)):
+def _send_token(person, token, host, url, time=int(extractor)):
     """
     Internal module function to send a short lived token to a person.
     It does not belong in the person model, as it is something particular
@@ -50,17 +55,17 @@ def _sendtoken(person, token, host, url, time=int(extractor)):
     hei = person.myHEI
     name = '' if hei is None else hei.name
     msg.from_email = _(f'Authentication system for {name} <no-reply@{host}>')
-    msg.subject = _('Your access token for {name} card management system')
+    msg.subject = _(f'Your access token for {name} card management system')
     msg.extra_headers = {'Message-Id': '{}@esiidm'.format(uuid.uuid4())}
     # This is a simple message, and it is better if the module has as few
     # external files as possible. And it can be used as a format string.
     msg.body = _(f"""
-    {{ person.first_name }} {{ person.last_name }}
+    {person.first_name} {person.last_name}
 
-    You are accessing {{ url }}, that requires that you authenticate with
-    the following token in the next {{ time }} minutes.
+    You are accessing {url}, that requires that you authenticate with
+    the following token in the next {time} minutes.
 
-    Token: {{ token }}
+    Token: {token}
 
     You can copy it and paste on the form that has informed you about
     this message.
@@ -79,18 +84,20 @@ def _sendtoken(person, token, host, url, time=int(extractor)):
 def authn(request):
     # Do we have someone to authenticate?
     person_id = request.session.get('person', None)
+    person = False
+    result = False
     if person_id is not None:
-        person = Person.object.filter(pk=person_id)
+        person = Person.objects.filter(pk=person_id).first()
         if not person:
             # Something is wierd ...
             request.session.flush()
-            return HttpResponseForbidden
+            return HttpResponseForbidden(_('Access not permitted'))
     if request.method == 'GET':
         if person:
             # Person is known to the system, no need to request an email
-            phase = 'final'
             token = uuid.uuid4().hex
             request.session['token'] = token
+            phase = 'final'
             result = _send_token(person, token,
                                  host = request.get_host().split(':')[0],
                                  url = request.session.get('next', ''))
@@ -107,29 +114,31 @@ def authn(request):
         if phase is None:
             # We should not reach here with no phase, something smells fishy
             request.session.flush()
-            return HttpResponseForbidden
+            return HttpResponseForbidden(_('Access not permitted'))
         if phase == 'final':
             saved_token = request.session.get('token', None)
             if saved_token is None:
                 # No token in session? Something smells fishy
                 request.session.flush()
-                return HttpResponseForbidden
+                return HttpResponseForbidden(_('Access not permitted'))
             received_token = request.POST.get('token', None)
             if received_token is None:
                 # No token from from? Something smells fishy
                 request.session.flush()
-                return HttpResponseForbidden
+                return HttpResponseForbidden(_('Access not permitted'))
             person_id = request.session.get('person', None)
-            person = Person.objects.filter(pk=person_id)
-            if not person:
+            person = Person.objects.filter(pk=person_id).first()
+            if person is None:
                 # No person in the session? Something smells fishy
                 request.session.flush()
-                return HttpResponseForbidden
+                return HttpResponseForbidden(_('Access not permitted'))
+            signer = TimestampSigner()
             try:
                 age = int(extractor)
                 received_token = signer.unsign(received_token, max_age=age*60)
             except SignatureExpired:
-                result = _send_token(person, token,
+                form = tokenForm()
+                result = _send_token(person, saved_token,
                                      host = request.get_host().split(':')[0],
                                      url = request.session.get('next', ''))
                 return render(request, 'esiidm/auth/mail.html',
@@ -137,10 +146,10 @@ def authn(request):
                                'result': result, 'expired': True})
             except BadSignature:
                 request.session.flush()
-                return HttpResponseForbidden()
+                return HttpResponseForbidden(_('Access not permitted'))
             if not received_token == saved_token:
                 request.session.flush()
-                return HttpResponseForbidden()
+                return HttpResponseForbidden(_('Access not permitted'))
             # All OK, the person is authenticated
             request.session['authn_source'] = source_name
             request.session['authn_attribute'] = 'token'
@@ -152,10 +161,12 @@ def authn(request):
             if email is None:
                 # No email from from? Something smells fishy
                 request.session.flush()
-                return HttpResponseForbidden
-            person = Person.objects.filter(email=email)
-            if person:
+                return HttpResponseForbidden(_('Access not permitted'))
+            person = Person.objects.filter(email=email).first()
+            if person is not None:
                 # If we know the email, send a token, if not, we don't care
+                token = uuid.uuid4().hex
+                request.session['token'] = token
                 request.session['person'] = person.id
                 result = _send_token(person, token,
                                      host = request.get_host().split(':')[0],
@@ -168,4 +179,4 @@ def authn(request):
 
     # If we reach here, there is no authenticated user
     request.session.flush()
-    return HttpResponseForbidden()
+    return HttpResponseForbidden(_('Access not permitted'))

@@ -1,18 +1,49 @@
-{% extends base.html %}
+{% extends "base.html" %}
 {% load i18n %}
 
 {% block content %}
-<h3>{% translate Welcome %}</h3>
-{% if request.user.is_staf %}
-{% blocktranslate %}
-You have permission to manage the system.<br>
-{% endblocktranslate %}
-<a href="{% url 'admin:index' %}">{% translate "link to admin panel" %}</a>
+<h3>{% trans "Welcome" %}</h3>
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+      {{ message }}
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+{{ request.user.first_name }} {{ request.user.last_name }}
+<a class="btn btn-danger" href="{% url 'esiidm:logout' %}">
+{% trans "Close session" %}
+</a><br>
+Email: {{ request.user.email }}<br>
+{% blocktrans %}
+You can authenticate to the system using:
+{% endblocktrans %}
+<br>
+<ul>
+  {% for i in request.user.identifiers.all %}
+  <li>{% trans i.source.description %}
+  {% endfor %}
+</ul><br>
+{% blocktrans %}
+If you want to use a new source for authenticating
+{% endblocktrans %}
+<a href="{% url 'esiidm:reinvite' %}">{% trans "request a new one" %}</a>
+{% blocktrans %}
+that will be sent to the above email address
+{% endblocktrans %}
+<br>
+{% if request.user.is_staff %}
+{% blocktrans %}
+You have permission to manage the system
+{% endblocktrans %}
+<a href="{% url 'admin:index' %}">{% trans "via the admin panel" %}</a><br>
 {% endif %}
 {% if request.user.is_officer %}
-{% blocktranslate %}
+{% blocktrans %}
 You can manage students for the following HEI:
-{% endblocktranslate %}
+{% endblocktrans %}
 <ul>
   {% for hei in request.user.HEIs %}
   <li>{{ hei }}</li>
@@ -21,7 +52,7 @@ You can manage students for the following HEI:
 {% endif %}
 {% if request.user.is_student %}
 <emph>Test presentation</emph>
-{% for c in request.user.cards %}
+{% for c in request.user.cards.all %}
 <table>
   <tr>
     <td>{{ c.hei.name }}</td>

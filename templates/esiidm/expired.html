@@ -1,18 +1,18 @@
-{% extends base.html %}
+{% extends "base.html" %}
 {% load i18n %}
 
 {% block content %}
-<h3>{% translate Expired invitation %}</h3>
+<h3>{% trans "Expired invitation" %}</h3>
 {% if result %}
-{% blocktranslate %}
+{% blocktrans %}
 The invitation you have used is expired.<br>
 You will receive a fresh one you can use.
-{% endblocktranslate %}
+{% endblocktrans %}
 {% else %}
-{% blocktranslate %}
+{% blocktrans %}
 The invitation you have used is expired.<br>
 But sending a new one to the email address the system has for you, has failed.
-{% endblocktranslate %}
+{% endblocktrans %}
 {% endif %}
 {% endblock %}
 

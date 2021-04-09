@@ -1,28 +1,28 @@
-{% extends base.html %}
+{% extends "base.html" %}
 {% load i18n %}
 
 {% block content %}
 <form method="post">
 {% if phase == "ask" %}
-{% blocktranslate %}
+{% blocktrans %}
 Please, enter your email address associated with the system, to recieve an
 access token.<br>
 It usually is the one in which you received a request for consent.<br>
-{% endblocktranslate %}
+{% endblocktrans %}
 {% endif %}
 {% if phase == "final" %}
     {% if expired %}
-    {% blocktranslate %}
+    {% blocktrans %}
     The token you used was expired. A new one has been sent.<br>
-    {% endblocktranslate %}
+    {% endblocktrans %}
     {% endif %}
-  {% blocktranslate %}
+  {% blocktrans %}
   Please, enter the token you have received from the system.<br>
-  {% endblocktranslate %}
+  {% endblocktrans %}
   {% endif %}
   {% csrf_token %}
   {{ form.as_p }}
-  <button class="btn btn-default" type="submit">{% translate OK %}</button>
+  <button class="btn btn-default" type="submit">{% trans "OK" %}</button>
 </form>
 {% endblock %}
 

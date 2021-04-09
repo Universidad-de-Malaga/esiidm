@@ -1,42 +1,42 @@
-{% extends base.html %}
+{% extends "base.html" %}
 {% load i18n %}
 
 {% block content %}
-{% blocktranslate %}
+{% blocktrans %}
 <h3>Welcome to the European Student Card and Identifier management system</h3>
 It is important the you consent that your personal information is processed
 in the system before using it.<br>
 This is what the system knows about you:<br>
-{% endblocktranslate %}
+{% endblocktrans %}
 <ul>
-  <li><strong>{% translate Name%}:</strong> {{ request.user.first_name }}</li>
-  <li><strong>{% translate Family name %}:</strong> {{ request.user.last_name }}</li>
-  <li><strong>{% translate Email %}:</strong> {{ request.user.email }}</li>
+  <li><strong>{% trans "Name" %}:</strong> {{ request.user.first_name }}</li>
+  <li><strong>{% trans "Family name" %}:</strong> {{ request.user.last_name }}</li>
+  <li><strong>{% trans "Email" %}:</strong> {{ request.user.email }}</li>
   {% if request.user.identifier %}
-  <li><strong>{% translate Identifier %}:</strong> {{ request.user.identifier }}</li>
+  <li><strong>{% trans "Identifier" %}:</strong> {{ request.user.identifier }}</li>
   {% endif %}
 </ul>
 <p>
-{% blocktranslate %}
+{% blocktrans %}
 Also, the system will create a link to the identification received vía
 {{ source.description }} but no extra personal information will be stored.
-{% endblocktranslate %}
+{% endblocktrans %}
 </p>
 <p>
 {% if request.user.is_student %}
-{% blocktranslate %}
+{% blocktrans %}
 Do you agree with the information being stored to provide you with an European
 Student Card and Identifier?
-{% endblocktranslate %}
+{% endblocktrans %}
 {% else %}
-{% blocktranslate %}
+{% blocktrans %}
 Do you agree with the information being stored to allow you access and
 manage the system?
-{% endblocktranslate %}
+{% endblocktrans %}
 {% endif %}
 </p>
-<a href="{% url esiidm:accept Y %}" class="btn btn-success">{% translate Yes %}</a>
-<a href="{% url esiidm:accept N %}" class="btn btn-danger">{% translate No %}</a>
+<a href="{% url 'esiidm:accept' token 'Y' %}" class="btn btn-success">{% trans "Yes" %}</a>
+<a href="{% url 'esiidm:accept' token 'N' %}" class="btn btn-danger">{% trans "No" %}</a>
 {% endblock %}
 {% comment %}
 vim:ts=2:expandtab:ai

@@ -83,6 +83,9 @@ class Person(AbstractUser):
                                     name='one_email_per_identifier'),
         ]
 
+    def __str__(self):
+        return f'{self.last_name}, {self.first_name} <{self.email}>'
+
     @property
     def is_officer(self):
         return Officer.objects.filter(person=self).exists()
@@ -143,7 +146,7 @@ class Person(AbstractUser):
         if not self.is_student: return
         super(Person, self).delete(*args, **kwargs)
 
-    def invite(self, manager, hei=None, subject=None,
+    def invite(self, manager=None, hei=None, subject=None,
                host=settings.ALLOWED_HOSTS[0],
                template='esiidm/student_invite.txt'):
         """
@@ -153,7 +156,7 @@ class Person(AbstractUser):
         a verified Identifier.
         - manager : is the person that is creating the invitation.
         - subject : an alternative subject, just in case
-        - hei : A HEI object, if we wnat the message to be in its name
+        - hei : A HEI object, if we want the message to be in its name
         """
         signer = TimestampSigner()
         context = {
@@ -162,21 +165,24 @@ class Person(AbstractUser):
                     'hei': hei,
                     'host': host,
                     'link': reverse('esiidm:accept',
-                                    kwargs={'otp': signer.sign(self.otp)}),
+                                    kwargs={'token': signer.sign(self.otp)}),
                   }
         msg = EmailMessage()
         msg.to = [f'"{self.first_name} {self.last_name}" <{self.email}>']
-        msg.from_email = '{} {} <no-reply@{}>'.format(manager.first_name,
-                                                      manager.last_name,
-                                                      host)
+        msg.from_email = f'ESI IdM at {host}<no-reply@{host}>'
+        if manager is not None:
+            msg.from_email = '{} {} <no-reply@{}>'.format(manager.first_name,
+                                                          manager.last_name,
+                                                          host)
         if hei is not None:
             msg.from_email = f'"{hei.name}" <no-reply@{host}>'
         msg.subject = _('Consent is required for the Student Card System')
         if subject is not None: msg.subject = subject
-        # Replies should go to the inviting person
-        msg.reply_to = ['"{} {}" <{}>'.format(manager.first_name,
-                                              manager.last_name,
-                                              manager.email)]
+        if manager is not None:
+            # Replies should go to the inviting person
+            msg.reply_to = ['"{} {}" <{}>'.format(manager.first_name,
+                                                  manager.last_name,
+                                                  manager.email)]
         msg.extra_headers = {'Message-Id': '{}@esiidm'.format(uuid.uuid4())}
         msg.body = render_to_string(template, context=context)
         try:
@@ -232,8 +238,8 @@ class IdSource(models.Model):
                              max_length = 200,
                              default = 'Authentication source',
                              editable = False,
-              .              verbose_name = _('Description'),
-               .             help_text = _(
+                             verbose_name = _('Description'),
+                             help_text = _(
                                 'Authentication source description.'))
 
 
@@ -250,7 +256,7 @@ class IdSource(models.Model):
     class Meta:
         verbose_name = _('Authentication source')
         verbose_name_plural = _('Authentication sources')
-        index_together = ['source', 'attribute']
+        #index_together = ['source', 'attribute']
         ordering = ['active', 'source', 'attribute']
         constraints = [
             models.UniqueConstraint(fields=['source', 'attribute'],
@@ -258,7 +264,7 @@ class IdSource(models.Model):
         ]
 
     def __str__(self):
-        return self.source
+        return f'{self.source} ({self.description})'
 
 
 class Identifier(models.Model):
@@ -341,18 +347,32 @@ class HEI(models.Model):
     pic = models.CharField(max_length = 20,
                            db_index = True,
                            unique = True,
+                           blank = True,
+                           null = True,
                            verbose_name = _('PIC code'))
     euc = models.CharField(max_length = 50,
                            db_index = True,
                            unique = True,
+                           blank = True,
+                           null = True,
                            verbose_name = _('EUC code'))
     erc = models.CharField(max_length = 30,
                            db_index = True,
                            unique = True,
+                           blank = True,
+                           null = True,
                            verbose_name = _('Erasmus code'))
+    oid = models.CharField(max_length = 10,
+                           db_index = True,
+                           unique = True,
+                           blank = True,
+                           null = True,
+                           verbose_name = _('OID code'))
     sho = models.CharField(max_length = 100,
                            db_index = True,
                            unique = True,
+                           blank = True,
+                           null = True,
                            verbose_name = _('SCHAC Home Organization'),
                            help_text = _('Your Internet domain. For ESI'))
     # ESC router information

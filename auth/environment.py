@@ -9,6 +9,8 @@ mod_auth_mellon or mod_shib.
 
 """
 from django.http import HttpResponseForbidden
+from django.shortcuts import redirect
+from django.urls import reverse
 
 import hashlib
 
@@ -22,7 +24,7 @@ def authn(request):
     attribute = request.META.get(source_attribute, None)
     if dn is None:
         request.session.flush()
-        return HttpResponseForbidden
+        return HttpResponseForbidden(_('Access not permitted'))
     # All OK, we have an authenticated user from the server
     # We save hashes, minimising PII
     attribute = hashlib.sha512(attribute).hexdigest().upper()

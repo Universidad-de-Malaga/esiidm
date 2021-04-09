@@ -11,7 +11,7 @@ def authn(request, method):
     source = IdSource.objects.filter(source=method, active=True)
     if not source:
         request.session.flush()
-        return HttpResponseForbidden
+        return HttpResponseForbidden(_('Access not permitted'))
     # Method OK, lets load its module and pass control
     m = __import__(method)
-    return m(request)
+    return m.authn(request)

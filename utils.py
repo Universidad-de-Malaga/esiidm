@@ -9,7 +9,5 @@ for the ESI IdM
 from django.conf import settings
 
 def get_setting(name, default=None):
-    try:
-        return eval(f'settings.{name}')
-    except:
-        return default
+    # None is the default default, just in case :-)
+    return getattr(settings, name, default)

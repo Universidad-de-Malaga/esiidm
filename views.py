@@ -7,12 +7,17 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.conf import settings
 from django.core.signing import TimestampSigner
+from django.core.signing import SignatureExpired
+from django.core.signing import BadSignature
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
 from django.utils import timezone
 from django.http import HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
+from django.contrib.auth import login
+from django.contrib.auth import logout
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
@@ -42,9 +47,16 @@ def authenticate(request):
         # The session may contain either a token or the id for the person
         person_id = request.session.get('person', None)
         otp = request.session.get('otp', None)
-        if person_id is None and otp is None:
+        source = request.session.get('authn_source', None)
+        attribute = request.session.get('authn_attribute', None)
+        if (person_id is None and
+            otp is None and
+            source is None and
+            attribute is None):
             # Something smells fishy...
-            return HttpResponseForbidden
+            if getattr(settings, 'DEBUG', False): print('auth. No nothing')
+            request.session.flush()
+            return HttpResponseForbidden(_('Access not permitted'))
         if person_id is None and otp is not None:
             # We have a token for a person
             # Get the person
@@ -54,16 +66,34 @@ def authenticate(request):
         if person_id is not None and otp is None:
             # Get the person
             person = get_object_or_404(Person, pk=person_id)
-            # Signal that the person is already know
+            # Signal that the person is already known
             request.session['authn_phase'] = 'end'
+        if person_id is not None and otp is not None:
+            # We can link
+            # Get the person with both attributes
+            person = get_object_or_404(Person, pk=person_id, otp=otp)
+            # Signal that linking is required
+            request.session['authn_phase'] = 'link'
+        if source is not None and attribute is not None and person_id is None:
+            # We have an indirect identification
+            source = IdSource.objects.filter(source=source).first()
+            identifier = Identifier.objects.filter(source=source,
+                                                   value=attribute).first()
+            if identifier is None:
+                if getattr(settings, 'DEBUG', False): print('No identifier')
+                request.session.flush()
+                return HttpResponseForbidden(_('Access not permitted'))
+            person = identifier.person
         # Log the person in
         login(request, person)
         return redirect(request.session.get('next', reverse('esiidm:start')))
     # How did we get here? Someone is messing with the session ...
-    return HttpResponseForbidden
+    if getattr(settings, 'DEBUG', False): print('auth. final')
+    request.session.flush()
+    return HttpResponseForbidden(_('Access not permitted'))
 
 
-def accept(request, otp, response=None):
+def accept(request, token, response=None):
     """
     This view initiates the consent process once someone receives
     an invitation as student or officer.
@@ -73,10 +103,10 @@ def accept(request, otp, response=None):
     try:
         # We allow for an extra hour
         age = get_setting('INVITE_MAX_HOURS', 25)
-        opt = signer.unsign(otp, max_age=60*60*age)
+        otp = signer.unsign(token, max_age=60*60*age)
     except SignatureExpired:
         # The token is expired, but is otherwise valid
-        otp = signer.unsign(otp)
+        otp = signer.unsign(token)
         # The OTP should point to known person, if not, we just explode
         person = Person.object.get(otp=otp)
         # Session should start anew
@@ -99,11 +129,14 @@ def accept(request, otp, response=None):
                                host=host, template=template)
         return render(request,'esiidm/expired.html', {'sent': result})
     except BadSignature:
+        if getattr(settings, 'DEBUG', False): print('accept. bad signature')
         request.session.flush()
-        return HttpResponseForbidden()
+        return HttpResponseForbidden(_('Access not permitted'))
     request.session['otp'] = otp
     # The OTP allows us to get the relevant user,
     # but is not verified by a login process
+    person = Person.objects.get(otp=otp)
+    request.session['person'] = person.id
     if not request.user.is_authenticated:
        return redirect(f'{settings.LOGIN_URL}?next={request.path}') 
     # The user should be authenticated now
@@ -113,19 +146,22 @@ def accept(request, otp, response=None):
     person = request.user
     if phase is None or source is None or attribute is None:
         # Someone is messing with the session ...
-        return HttpResponseForbidden
+        if getattr(settings, 'DEBUG', False): print('accept. no phase, source, att')
+        request.session.flush()
+        return HttpResponseForbidden(_('Access not permitted'))
     if phase == 'link':
         # We know how the person has authenticated, we can inform about it
         idsource = get_object_or_404(IdSource, source=source)
         # We need to add an Identifier for the Person
         if response is None and not person.has_accepted:
             # The person has not consented yet
-            return render(request, 'esiidm/consent.html', {'source': source})
+            return render(request, 'esiidm/consent.html', {'source': source,
+                                                           'token': token})
         if response == 'Y' or person.has_accepted:
             # We need a new identifier
-            identifier, new = Identifier(source=idsource,
-                                         person=person,
-                                         value=attribute)
+            identifier, new = Identifier.objects.get_or_create(source=idsource,
+                                                               person=person,
+                                                               value=attribute)
             if not person.has_accepted:
                 # Mark person has consented
                 person.acceptedOn = timezone.now()
@@ -154,7 +190,33 @@ def start(request):
     If the autheticated person has not consented or has not authenticated,
     just inform about the options.
     """
-    template = 'index.html' if request.user.is_authenticated else 'unkown.html'
-    return render(template)
+    template = 'esiidm/index.html' if request.user.is_authenticated \
+                                   else 'esiidm/unknown.html'
+    return render(request, template)
 
+@login_required
+def reinvite(request):
+    if not request.user.is_authenticated:
+        return redirect(reverse('esiidm:start'))
+    host = get_setting('MAIL_ORIGIN_DOMAIN',
+                       request.get_host().split(':')[0])
+    result = request.user.invite(manager=None, hei=None, host=host,
+                                 subject=_('Link for adding a new autentication'),
+                                 template='esiidm/reinvite.txt')
+    if result:
+        logout(request)
+        messages.success(request, _(f'Link sent to {request.user.email}'))
+        messages.warning(request, _(f'Your session has been closed.'))
+    else:
+        message.error(request, _(f"Send link to {request.user.email} failed."))
+    return redirect(reverse('esiidm:start'))
+
+@login_required
+def end(request):
+    """
+    Kills the session and logs the user out.
+    """
+    request.session.flush()
+    logout(request)
+    return redirect(reverse('esiidm:start'))
 

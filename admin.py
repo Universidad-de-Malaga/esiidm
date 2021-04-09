@@ -77,28 +77,6 @@ class CountryListFilter(admin.SimpleListFilter):
             return queryset
 
 
-class IdentifierInline(admin.TabularInline):
-    model = Identifier
-    hidden_fields = ('id')
-
-    def has_view_permission(self, request, obj=None):
-        if not super(IdentifierInline, self).has_view_permission(request, obj):
-            return False
-        if obj is None : return True
-        # Not even superusers should view Identifiers for
-        # Persons they do not manage
-        if obj is not None and request.user.id == obj.managedBy.id:
-            return True
-        # Persons with admin privileges can view their data
-        if obj is not None and request.user.id == obj.id:
-            return True
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        # Nobody may change identifier data, it has to happen from an invite
-        return False
-
-
 ###########################
 # Actions
 ###########################
@@ -134,13 +112,37 @@ send_invites.short_description = _('Send invite to selected persons')
 ###########################
 # Model admins
 ###########################
+class IdentifierInline(admin.TabularInline):
+    model = Identifier
+    hidden_fields = ('id')
+    readonly_fields = ('source', 'value', 'createdOn')
+    extra = 0
+
+    def has_view_permission(self, request, obj=None):
+        if not super(IdentifierInline, self).has_view_permission(request, obj):
+            return False
+        if obj is None : return True
+        # Not even superusers should view Identifiers for
+        # Persons they do not manage
+        if obj is not None and request.user.id == obj.managedBy.id:
+            return True
+        # Persons with admin privileges can view their data
+        if obj is not None and request.user.id == obj.id:
+            return True
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        # Nobody may change identifier data, it has to happen from an invite
+        return False
+
+
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     list_filter = [ HasAcceptedListFilter, IsInvitedListFilter ]
     search_fields = ['email', 'identifier', 'last_name']
     list_display_links = ['email', 'identifier', 'last_name']
-    list_display = ['email', 'identifier', 'last_name', 'has_accepted',
-                    'is_officer', 'is_superuser']
+    list_display = ['email', 'identifier', 'last_name', 'first_name',
+                    'has_accepted', 'is_officer', 'is_superuser']
     readonly_fields = ['acceptedOn', 'invitedOn', 'last_login', 'date_joined']
     inlines = [ IdentifierInline ]
     actions = [ send_invites ]
@@ -245,9 +247,9 @@ class PersonAdmin(admin.ModelAdmin):
 @admin.register(HEI)
 class HEIAdmin(admin.ModelAdmin):
     list_filter = [CountryListFilter]
-    search_fields = ['name', 'pic', 'euc', 'sho']
-    list_display = ['name', 'pic', 'sho', 'url', 'erc']
-    list_display_links = ['name', 'pic', 'sho']
+    search_fields = ['name', 'pic', 'euc', 'oid', 'sho']
+    list_display = ['name', 'pic', 'sho', 'oid', 'url', 'erc']
+    list_display_links = ['name', 'pic', 'oid', 'sho']
 
     def has_view_permission(self, request, obj=None):
         if not super(HEIAdmin, self).has_view_permission(request, obj):
@@ -336,6 +338,7 @@ class HEIAdmin(admin.ModelAdmin):
             - country : HEI country ISO two letter code
             - pic : HEI PIC code
             - euc : HEI EUC code
+            - oid : HEI OID code
             - erc : HEI Erasmus code
             - sho : SCHAC Home Organization (HEI Internet domain)
             - manager : email address for the main HEI officer
@@ -363,7 +366,7 @@ class HEIAdmin(admin.ModelAdmin):
             for line in lines:
                 total += 1
                 errors_in_line = False
-                for field in ['name', 'country', 'pic', 'euc', 'erc', 'sho']:
+                for field in ['name', 'country', 'pic', 'euc', 'erc', 'sho', 'oid']:
                     if line.get(field, '').strip() == '':
                         errors_in_line = True
                         errors.append(_(f'Field {field} missing on line {total}'))
@@ -378,6 +381,7 @@ class HEIAdmin(admin.ModelAdmin):
                 # We are good, chech if the HEI exists
                 hei  = HEI.objects.filter(pic=line['pic'],
                                           euc=line['euc'],
+                                          oid=line['oid'],
                                           erc=line['erc']).first()
                 if hei is not None:
                     e = _(f'{hei} already exists in line {total}')
@@ -387,6 +391,7 @@ class HEIAdmin(admin.ModelAdmin):
                 hei.pic = line['pic']
                 hei.euc = line['euc']
                 hei.erc = line['erc']
+                hei.oid = line['oid']
                 hei.managedBy = manager
                 hei.name = line['name']
                 hei.country = line['country']
@@ -433,11 +438,15 @@ class HEIAdmin(admin.ModelAdmin):
 
 @admin.register(Officer)
 class OfficerAdmin(admin.ModelAdmin):
-    list_filter = ['hei__name', 'hei__sho', 'hei__pic']
+    list_filter = ['hei__name', 'hei__sho', 'hei__pic', 'hei__oid']
     list_filter_select = True
     select_related = True
-    search_fields = ['person__email', 'hei__pic', 'hei__euc', 'hei__sho']
-    list_display = ['person',]
+    search_fields = ['person__email',
+                     'hei__pic',
+                     'hei__euc',
+                     'hei__oid',
+                     'hei__sho']
+    list_display = ['person','hei',]
     list_display_links = ['person',]
     fieldsets = [(None, {'fields': [('person', 'hei'), 'manager']})]
 
@@ -520,7 +529,8 @@ class OfficerAdmin(admin.ModelAdmin):
             - pic : officer's HEI PIC code
             - euc : officer's HEI EUC code
             - erc : officer's HEI ERC code
-            Only one of PIC, EUC or ERC is required for linking the officer
+            - oid : officer's HEI OID code
+            Only one of PIC, EUC, ERC or OID is required for linking the officer
             to the HEI. If there is no HEI, the person is created in the system
             with needed privileges but no associated HEI.
             Persons receive an invitation via email for activating the account.
@@ -553,7 +563,8 @@ class OfficerAdmin(admin.ModelAdmin):
                 if errors_in_line: continue
                 hei = HEI.objects.filter(Q(pic=line.get('pic', None))|
                                          Q(euc=line.get('euc', None))|
-                                         Q(erc=line.get('erc', None))).first()
+                                         Q(euc=line.get('erc', None))|
+                                         Q(erc=line.get('oid', None))).first()
                 # Do we have a HEI?
                 if hei is None:
                     errors.append(_(f'Wrong HEI on line {total}'))
@@ -821,8 +832,9 @@ class StudentCardAdmin(admin.ModelAdmin):
 @admin.register(IdSource)
 class IdSourceAdmin(admin.ModelAdmin):
     search_fields = ['source', 'attribute',]
-    list_display = ['source', 'attribute', 'extractor', 'description']
-    list_editable = ['attribute', 'extractor']
+    list_display = ['source', 'active', 'attribute', 'extractor', 'description']
+    list_editable = ['active']
+    list_filter = ['active']
     list_display_links = ['source', ]
     fieldsets = [(None, {'fields': [('source', 'attribute'), 'extractor',
                                     'description']})]

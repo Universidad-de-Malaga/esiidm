@@ -12,9 +12,9 @@ class EsiidmConfig(AppConfig):
         # Load the authentication modules in the admin
         from .models import IdSource
         import pkgutil
-        import auth
+        import esiidm.auth
         modules = []
-        for i,name,p in pkgutil.iter_modules(auth.__path__):
+        for i,name,p in pkgutil.iter_modules(esiidm.auth.__path__):
             m = i.find_module(name).load_module(name)
             modules.append(name)
             source, new = IdSource.objects.get_or_create(source=name)
@@ -28,5 +28,5 @@ class EsiidmConfig(AppConfig):
         del(p)
         del(m)
         # Remove sources that do not have a module implementing them
-        IdSource.objects.exclude(source__in=modules).delete()
+        #IdSource.objects.exclude(source__in=modules).delete()
 

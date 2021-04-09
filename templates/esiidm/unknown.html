@@ -1,13 +1,13 @@
-{% extends base.html %}
+{% extends "base.html" %}
 {% load i18n %}
 
 {% block content %}
-{% blocktranslate %}
-<h3>Welcome</h3>
-You have to 
-<a href="{% url esiidm:authenticate %}" class="btn btn-default">authenticate</a>
-for using the system.
-{% endblocktranslate %}
+<h3>{% trans "Welcome" %}</h3>
+{% trans "You have to" %} 
+<a href="{% url 'esiidm:authenticate' %}" class="btn btn-default">
+  {% trans "authenticate yourself" %}
+</a>
+{% trans "to use the system." %}
 {% endblock %}
 
 {% comment %}

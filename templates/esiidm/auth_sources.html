@@ -1,18 +1,18 @@
-{% extends base.html %}
+{% extends "base.html" %}
 {% load i18n %}
 
 {% block content %}
 <h3>
-{% blocktranslate %}
+{% blocktrans %}
 Please, select one of the following authentication methods
-{% endblocktranslate %}
+{% endblocktrans %}
 </h3>
 
   <ul>
   {% for source in sources %}
     <li>
-      <a href="{% url esiidm:authn source %}">
-        {% translate source.description %}
+      <a href="{% url 'esiidm:authn' source.source %}">
+        {% trans source.description %}
       </a>
     </li>
   {% endfor %}
