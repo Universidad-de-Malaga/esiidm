@@ -11,18 +11,19 @@ mod_auth_mellon or mod_shib.
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.translation import ugettext_lazy as _
 
 import hashlib
 
 source_name = 'environment'
 source_attribute = 'WHATEVER'
 extractor = '.*'
-description = 'HTTP server environment variables based authentication'
+description = _('HTTP server environment variables based authentication')
 
 def authn(request):
     # Who's using us?
     attribute = request.META.get(source_attribute, None)
-    if dn is None:
+    if attribute is None:
         request.session.flush()
         return HttpResponseForbidden(_('Access not permitted'))
     # All OK, we have an authenticated user from the server

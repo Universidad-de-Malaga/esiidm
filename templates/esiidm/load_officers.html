@@ -1,48 +1,107 @@
 {% extends "admin/base_site.html" %}
+{% load i18n %}
 {% block content %}
     <div>
-        <h2>Officer bulk load</h2>
-        <p>
-        An officer is just a person that has special status and is linked to
-        a HEI (or more) whose cards and students is authorised to manage.
+      <h2>{% trans "Officer bulk load" %}</h2>
+      <p>
+      {% blocktrans %}
+      An officer is just a person that has special status and is linked to
+      a HEI (or more) whose cards and students is authorised to manage.
+      {% endblocktrans %}
+      <br/>
+      {% if request.user.is_superuser %}
+      {% blocktrans %}
+      The first officer for a HEI may be loaded as an unlinked person and the link
+      is later established when the HEI is created.
+      {% endblocktrans %}
+      {% endif %}
+      </p>
+      <h3>
+        {% blocktrans %}
+        The CSV file MUST (RFC2119) have field names as columns on
+        the first row.<br />
+        Fields MAY (RFC2119) be in any order.
+        {% endblocktrans %}
+      </h3>
+      <h3>
+        {% blocktrans %}
+        The CSV file MUST (RFC2119) have a minimum set of fields:
+        {% endblocktrans %}
+      </h3>
+      <ul>
+        <li>
+          <strong>first_name:</strong>
+          {% trans "officer's given name" %}
+        </li>
+        <li>
+          <strong>last_name:</strong>
+          {% trans "officer's family name" %}
+        </li>
+        <li>
+          <strong>email:</strong>
+          {% trans "officer's email" %}
+        </li>
+      </ul>
+      <h3>
+        {% blocktrans %}
+        The rows MAY (RFC2119) also contain these optional fields:
+        {% endblocktrans %}
+      </h3>
+      <ul>
+        <li>
+          <strong>identifier:</strong>
+          {% trans "government issued identifier for the person" %}
+        </li>
+        {% if request.user.is_superuser %}
+        <li>
+          <strong>sho:</strong>
+          {% trans "officer's HEI schacHomeOrganization" %}
+        </li>
+        <li>
+          <strong>pic:</strong>
+          {% trans "officer's HEI PIC code" %}
+        </li>
+        <li>
+          <strong>euc:</strong>
+          {% trans "officer's HEI EUC code" %}
+        </li>
+        <li>
+          <strong>erc:</strong>
+          {% trans "officer's HEI ERC code" %}
+        </li>
+        <li>
+          <strong>oid:</strong>
+          {% trans "officer's HEI OID code" %}
+        </li>
+        {% endif %}
+      </ul>
+      <p>
+        {% if request.user.is_superuser %}
+        {% blocktrans %}
+        Only one of SHO, PIC, EUC, ERC or OID is required for linking
+        the officer to the HEI.
+        {% endblocktrans %}
         <br/>
-        The first officer for a HEI may be loaded as an unlinked person and the link
-        is later established when the HEI is created.
-        </p>
-        <h3>The CSV file MUST (RFC2119) have field names as columns on
-            the first row.<br />
-            Fields MAY (RFC2119) be in any order.
-        </h3>
-        <h3>The CSV file MUST (RFC2119) have a minimum set of fields:</h3>
-          <ul>
-            <li><strong>first_name:</strong> officer's given name</li>
-            <li><strong>last_name:</strong> officer's family name</li>
-            <li><strong>email:</strong> officer's email</li>
-          </ul>
-        <h3>The rows MAY (RFC2119) also contain these optional fields:</h3>
-          <ul>
-            <li><strong>identifier:</strong> government issued identifier
-                                             for the person</li>
-            <li><strong>pic:</strong> officer's HEI PIC code</li>
-            <li><strong>euc:</strong> officer's HEI EUC code</li>
-            <li><strong>erc:</strong> officer's HEI ERC code</li>
-          </ul>
-          <p>
-            Only one of PIC, EUC or ERC is required for linking the officer
-            to the HEI.
-          <br/>
-            If there is no HEI, the person is created in the system
-            with needed privileges but no associated HEI.
-          <br/>
-            Persons receive an invitation via email for activating the account.
-          </p>
+        {% blocktrans %}
+        If there is no HEI, the person is created in the system
+        with needed privileges but no associated HEI.
+        {% endblocktrans %}
+        <br/>
+        {% endif %}
+        {% blocktrans %}
+        Persons receive an invitation via email for activating the account.
+        {% endblocktrans %}
+      </p>
     </div>
     <div>
-        <form action="." method="POST" enctype="multipart/form-data">
-            {{ form.as_p }}
-            {% csrf_token %}
-                <button class="button" index="0" type="submit">Upload CSV</button>
-        </form>
+      <form action="." method="POST" enctype="multipart/form-data">
+        {{ form.as_p }}
+        {% csrf_token %}
+        {% trans "Please, make sure you select the right delimiter." %}
+        <button class="button" index="0" type="submit">
+          {% trans "Upload CSV" %}
+        </button>
+      </form>
     </div>
     <br />
 

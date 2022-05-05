@@ -14,6 +14,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
 from django.utils import timezone
 from django.http import HttpResponseForbidden
+from django.http import HttpResponse
+from django.http import FileResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth import login
@@ -22,7 +24,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
 
-from .models import IdSource, Identifier, Person
+from .models import IdSource, Identifier, Person, HEI
 from .utils import get_setting
 
 def authenticate(request):
@@ -108,7 +110,7 @@ def accept(request, token, response=None):
         # The token is expired, but is otherwise valid
         otp = signer.unsign(token)
         # The OTP should point to known person, if not, we just explode
-        person = Person.object.get(otp=otp)
+        person = Person.objects.get(otp=otp)
         # Session should start anew
         request.session.flush()
         if person.is_superuser:
@@ -204,11 +206,11 @@ def reinvite(request):
                                  subject=_('Link for adding a new autentication'),
                                  template='esiidm/reinvite.txt')
     if result:
+        messages.success(request, _('Link sent to {0}').format(request.user.email))
+        messages.warning(request, _('Your session has been closed.'))
         logout(request)
-        messages.success(request, _(f'Link sent to {request.user.email}'))
-        messages.warning(request, _(f'Your session has been closed.'))
     else:
-        message.error(request, _(f"Send link to {request.user.email} failed."))
+        message.error(request, _('Send link to {0} failed.').format(request.user.email))
     return redirect(reverse('esiidm:start'))
 
 @login_required
@@ -220,3 +222,17 @@ def end(request):
     logout(request)
     return redirect(reverse('esiidm:start'))
 
+@login_required
+def cards(request, hid):
+    """
+    Generates a PDF with all the cards for the HEI the officer manages.
+    """
+    if not request.user.is_officer:
+        return HttpResponseForbidden(_('Access not permitted'))
+    if not hid in [h.id for h in request.user.HEIs]:
+        return HttpResponseForbidden(_('Access not permitted.'))
+    hei = HEI.objects.get(id=hid)
+    response = HttpResponse(hei.pdf_cards(),
+                            content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename={hei.sho}.cards.pdf'
+    return response

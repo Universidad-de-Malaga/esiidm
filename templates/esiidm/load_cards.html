@@ -1,41 +1,81 @@
 {% extends "admin/base_site.html" %}
+{% load i18n %}
 {% block content %}
     <div>
-        <h2>Student cards bulk load</h2>
-        <h3>The CSV file MUST (RFC2119) have field names as columns on
-            the first row.<br />
-            Fields MAY (RFC2119) be in any order.
-        </h3>
-        <h3>The CSV file MUST (RFC2119) have a minimum set of fields:</h3>
+      <h2>{% trans "Student cards bulk load" %}</h2>
+      <h3>
+        {% blocktrans %}
+        The CSV file MUST (RFC2119) have field names as columns on
+        the first row.<br />
+        Fields MAY (RFC2119) be in any order.
+        {% endblocktrans %}
+      </h3>
+      <h3>
+        {% blocktrans %}
+        The CSV file MUST (RFC2119) have a minimum set of fields:
+        {% endblocktrans %}
+      </h3>
+      <ul>
+        <li>
+          <strong>esi:</strong>
+          {% trans "contains the student specific part of the ESI" %}
+        </li>
+        <li>
+          <strong>first_name:</strong>
+          {% trans "student's given name" %}
+        </li>
+        <li>
+          <strong>last_name:</strong>
+          {% trans "student's family name" %}
+        </li>
+        <li>
+          <strong>email:</strong>
+          {% trans "student's email" %}
+        </li>
+      </ul>
+      <h3>
+        {% blocktrans %}
+        The rows MAY (RFC2119) also contain these optional fields:
+        {% endblocktrans %}
+      </h3>
+      <ul>
+        <li>
+          <strong>identifier:</strong>
+          {% trans "government issued identifier for the student" %}
+        </li>
+        <li>
+          <strong>operation:</strong>
+          {% trans "if present, value MUST (RFC 2119) be either" %}:
           <ul>
-        <li><strong>esi:</strong> contains the student specific part of the ESI</li>
-        <li><strong>first_name:</strong> student's given name</li>
-        <li><strong>last_name:</strong> student's family name</li>
-        <li><strong>email:</strong> student's email</li>
+            <li>
+              {% blocktrans %}
+              D for deleting the card if it belongs to the student
+              {% endblocktrans %}
+            </li>
+            <li>
+              {% blocktrans %}
+              C for creating a new card, this is the default if absent
+              {% endblocktrans %}
+            </li>
           </ul>
-        <h3>The rows MAY (RFC2119) also contain these optional fields:</h3>
-        <ul>
-          <li><strong>identifier:</strong> government issued identifier
-                                           for the student</li>
-          <li><strong>operation:</strong> if present, value MUST (RFC 2119) be
-                                          either:
-              <ul>
-                <li>D for deleting the card if it belongs to the student</li>
-                <li>C for creating a new card, this is the default if absent</li>
-              </ul>
-          </li>
-        </ul>
-        <p>
-        Persons are created as needed and receive an invitation over email
-        requesting consent.
-        </p>
+        </li>
+      </ul>
+      <p>
+      {% blocktrans %}
+      Persons are created as needed and receive an invitation over email
+      requesting consent.
+      {% endblocktrans %}
+      </p>
     </div>
     <div>
-        <form action="." method="POST" enctype="multipart/form-data">
-            {{ form.as_p }}
-            {% csrf_token %}
-                <button class="button" index="0" type="submit">Upload CSV</button>
-        </form>
+      <form action="." method="POST" enctype="multipart/form-data">
+        {{ form.as_p }}
+        {% csrf_token %}
+        {% trans "Please, make sure you select the right delimiter." %}
+        <button class="button" index="0" type="submit">
+          {% trans "Upload CSV" %}
+        </button>
+      </form>
     </div>
     <br />
 

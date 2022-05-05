@@ -23,9 +23,14 @@ from django.contrib.auth.models import AbstractUser
 AbstractUser._meta.get_field('email')._unique = True
 
 from urllib import parse
+from fpdf import FPDF
 import uuid
 import requests
 import calendar
+import qrcode
+import io
+import base64
+import os
 
 from .utils import get_setting
 
@@ -107,6 +112,14 @@ class Person(AbstractUser):
         return self.invitedOn is not None
 
     @property
+    def myESI(self):
+        """
+        Returns all ESI associated to a Person for generating the required
+        schacPersonalUniqueCode attrbute values in the SAML assertions.
+        """
+        return [c.myESI(myacid=True) for c in self.cards.all()]
+
+    @property
     def myHEI(self):
         # The most common use case is "one Person <-> one HEI", 
         # so we return the first HEI
@@ -118,23 +131,39 @@ class Person(AbstractUser):
     @property
     def HEIs(self):
         # Officers may manage more than one HEI, we need them as QuerySet
-        if not self.is_officer: return []
+        if not self.is_officer: return HEI.objects.none()
         # List of HEIs the person is an Officer for
         heis = [o.hei.id for o in self.manages.all()]
         return HEI.objects.filter(id__in=heis)
 
-    def save(self, *args, **kwargs):
-        """
-        We do some checks before saving
-        """
-        # In case someone decides to remove consent, we remove the cards
-        if not self.has_accepted and self.cards.count() > 0:
-            for card in self.cards.all(): card.delete()
-        # If someone has consented and there are unregistered associated cards
-        for card in self.cards.filter(registeredOn__isnull=True):
-            # Send the information to the ESC Router
-            card.save_in_ESCR()
-        super(Person, self).save(*args, **kwargs)
+    @property
+    def affiliation(self):
+        # Return scoped affiliations for the person
+        result = []
+        if self.is_student:
+            result += [f'student@{c.hei.sho}' for c in self.cards.all()]
+        if self.is_officer:
+            result += [f'staff@{o.hei.sho}' for o in self.manages.all()]
+        return result
+
+    #def save(self, *args, **kwargs):
+    #    """
+    #    We do some checks before saving
+    #    """
+    #    # How long has lapsed since last invitation?
+    #    # Nobody is so fast to reject the invitation in less than a minute
+    #    d = 0
+    #    if self.invitedOn is not None:
+    #        d = timezone.now() - self.invitedOn
+    #        d = d.seconds
+    #    # In case someone decides to remove consent, we remove the cards
+    #    if d > 60 and not self.has_accepted and self.cards.count() > 0:
+    #        for card in self.cards.all(): card.delete()
+    #    # If someone has consented and there are unregistered associated cards
+    #    for card in self.cards.filter(registeredOn__isnull=True):
+    #        # Send the information to the ESC Router
+    #        card.save_in_ESCR()
+    #    super(Person, self).save(*args, **kwargs)
             
     def delete(self, *args, **kwargs):
         """
@@ -143,7 +172,7 @@ class Person(AbstractUser):
         for card in self.cards.all(): card.delete()
         # If there are cards left, something went wrong
         # we cannot delete the person
-        if not self.is_student: return
+        if self.is_student: return
         super(Person, self).delete(*args, **kwargs)
 
     def invite(self, manager=None, hei=None, subject=None,
@@ -237,7 +266,7 @@ class IdSource(models.Model):
     description = models.CharField(
                              max_length = 200,
                              default = 'Authentication source',
-                             editable = False,
+                             editable = True,
                              verbose_name = _('Description'),
                              help_text = _(
                                 'Authentication source description.'))
@@ -413,8 +442,8 @@ class HEI(models.Model):
         get associated to other managing person if they have enrolments
         in other HEI 
         """
-        for student in self.students.all():
-            card = student.person.cards.all().exclude(hei=self)
+        for student in self.studentcards.all():
+            card = student.person.cards.all().exclude(hei=self).first()
             if card is not None:
                 # Person is enrolled in other HEI at least
                 # Pass control to the manager of first HEI
@@ -423,7 +452,7 @@ class HEI(models.Model):
                 person.save()
         # Officers may be enrolled as students in other HEIs
         for officer in self.officers.all():
-            card = officer.person.cards.all().exclude(hei=self)
+            card = officer.person.cards.all().exclude(hei=self).first()
             if card is not None:
                 # Person is enrolled in other HEI at least
                 # Pass control to the manager of first HEI
@@ -438,11 +467,11 @@ class HEI(models.Model):
         Returns an ESC for a student enroled in the HEI
         It is HEI specific, thus, we use a HEI object level method
         """
-        # The machine ID is used by ESC in case there are more than system
+        # The machine ID is used by ESC in case there are more than one system
         # producing ESC cards for an instituion, usually it is just one
         machineId = get_setting('MACHINEID','001')
-        return str(uuid.uuid1(node=int('{}{}'.format(machineId,
-                                                     self.pic), 10)))
+        uu = uuid.uuid1(node=int('{}{}'.format(machineId, self.pic), 10))
+        return str(uu)[:-12]+'{0:>012}'.format(uu.node)
 
     def ESC_Router(self, operation, **kwargs):
         """
@@ -519,7 +548,7 @@ class HEI(models.Model):
             if json is None and esc is not None and esi is not None:
                 base_url = parse.urljoin(base_url, '{}{}'.format(esi, '/cards'))
                 json = {'europeanStudentCardNumber': esc,
-                        'cardType': 1},
+                        'cardType': 1}
             r = requests.post(base_url, headers = headers, json = json,
                     timeout = get_setting('ESCROUTER_TIME_OUT',1))
             return r
@@ -540,6 +569,63 @@ class HEI(models.Model):
         # If we reach here, better return None
         return None
 
+    def pdf_cards(self):
+        if not os.path.exists('/tmp/qr-cards'):
+            os.mkdir('/tmp/qr-cards')
+
+        # Information position from card top left corner
+        location = {'name': (5, 30), 'esi': (5, 40),
+                    'qr': (59, 20), 'esc': (5, 45)}
+        start = {'x': 12, 'y': 10}
+        gap = {'x': 10, 'y': 2}
+        size = {'x': 85, 'y': 55}
+
+
+        pdf = FPDF('P','mm','A4')
+        pdf.add_font('DejaVu','',
+                     '/usr/share/fonts/dejavu/DejaVuSans.ttf',uni=True)
+        pdf.add_font('DejaVu','B',
+                     '/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf',uni=True)
+
+        count = 0
+        for card in self.studentcards.all():
+            qr = f'/tmp/qr-cards/{card.esc}.png'
+            if not os.path.exists(qr):
+                open(qr,'wb').write(card.myESCQR(b64=False).read())
+            
+            if count % 10 == 0: pdf.add_page()
+            hpos = (count % 2)
+            vpos = int((count % 10)/2) if hpos == 0 else vpos
+            x = start['x']+(size['x']*(hpos))+(gap['x']*hpos)
+            y = start['y']+(size['y']*(vpos))+(gap['y']*vpos) if hpos == 0 else y
+
+            pdf.line(x, y, x+size['x'], y)
+            pdf.line(x+size['x'], y, x+size['x'], y+size['y'])
+            pdf.line(x+size['x'], y+size['y'], x, y+size['y'])
+            pdf.line(x, y+size['y'], x, y)
+
+            pdf.set_xy(x + location['name'][0], y + location['name'][1])
+            fullname = f'{card.student.first_name} {card.student.last_name}'
+            pdf.set_font('DejaVu', 'B', 11)
+            if len(fullname) > 24:
+                pdf.set_font('DejaVu', 'B', 10)
+            if len(fullname) > 27:
+                pdf.set_font('DejaVu', 'B', 9)
+            if len(fullname) > 30:
+                pdf.set_font('DejaVu', 'B', 8)
+            pdf.cell(0,10,fullname)
+            pdf.set_xy(x + location['esi'][0], y + location['esi'][1])
+            pdf.set_font('DejaVu','',9)
+            pdf.cell(0,10,f'{card.esi}')
+            pdf.set_xy(x + location['esc'][0], y + location['esc'][1])
+            pdf.set_font('DejaVu','',9)
+            pdf.cell(0,10,f'{card.esc}')
+            pdf.image(qr, x + location['qr'][0], y + location['qr'][1], 25, 25)
+
+            count = count + 1
+
+        return pdf.output(name="" ,dest="S").encode('latin1')
+        return pdf
 
 class Officer(models.Model):
     """A class for linking persons to the institutions they manage"""
@@ -592,12 +678,17 @@ class Officer(models.Model):
         replacements = Officer.objects.filter(hei = self.hei)
         replacements.exclude(person = self.person)
         # Officer cannot be deleted, here is no replacement
-        if len(replacements) == 0: return
+        if len(replacements) == 0: return False
+        # Pass HEI to the first replacement in line
+        self.hei.managedBy = replacement[0].person
         # Pass all cards to the first replacement in line
-        for card in self.cards.all(): card.manager = replacements[0]
-        # Pass all persons related to te person that is the deleted officer
-        # >>>>>>>>>>>>>>>>> Falta update or save de la persona
-        for person in self.persons.all(): person.managedBy = replacements[0]
+        self.cards.all().update(manager = replacements[0])
+        # Pass objects related to the person that is the deleted officer
+        # but only those that belong to the same HEI as the Officer
+        #self.person.persons.all().update(managedBy = replacements[0].person)
+        #self.person.manages.all().update(managedBy = replacements[0].person)
+        # Remove staff status if the person does not manage any HEI
+
         super(Officer, self).delete(*args, **kwargs)
 
 
@@ -697,6 +788,28 @@ class StudentCard(models.Model):
             self.registered = None
         super(StudentCard, self).delete(*args, **kwargs)
             
+    def myESCURL(self):
+        """
+        Return the ESC verification URL for generating a QR code.
+        """
+        base_url = get_setting('ESCROUTER_VERIFY_URL', None)
+        if base_url is None: return ''
+        return f'{base_url}/{self.esc}'
+
+    def myESCQR(self, b64=True):
+        """
+        Return the ESC verification QR code.
+        The format is base64 ASCII encoded, so it can be inserted as
+        an HTML image source.
+        If b64 is False, the byte stream is returned raw.
+        """
+        qr = io.BytesIO()
+        qrcode.make(self.myESCURL()).save(qr)
+        qr.seek(0)
+        if b64:
+            qr = base64.b64encode(qr.read()).decode('ascii')
+        return qr
+
     def myESI(self, myacid = False):
         """
         Return the European Student Identifier (ESI)
@@ -772,7 +885,7 @@ class StudentCard(models.Model):
                     for x in attributes['cards']]
         return list()
 
-    def save_in_ESCR(self):
+    def save_in_ESCR(self, debug=False):
         """
         Insert or update the card in the European Student Card Router,
         Returns True if everything went well.
@@ -786,7 +899,10 @@ class StudentCard(models.Model):
         operation = 'POST'
         if self.is_registered: operation = 'PUT'
         r = self.hei.ESC_Router(operation, json = data)
-        if r.status_code != 201: return False
+        if r.status_code != 201:
+            if debug:
+                return r.status_code, r.url, 'Add card response', r.text
+            return False
 
         if self.esc not in self.cards:
             # Add card
@@ -824,11 +940,13 @@ class StudentCard(models.Model):
         Removes the information about the student from the ESC Router.
         Only students with no cards can be removed.
         """
-        if self.cards.count() == 0:
+        if len(self.cards) == 0:
             # No cards left for the ESI
             r = self.hei.ESC_Router('DELETE', esi = self.myESI())
             return r.status_code == 204
 
         return False
 
+# We import the signals so they are bound to the objects
+from . import signals
 

@@ -13,7 +13,7 @@ from django.dispatch import receiver
 from django.conf import settings
 from django.core.mail import send_mail,EmailMessage
 
-from .models import Person, StudentCard, HEI
+from .models import Person, StudentCard, HEI, Officer
 
 
 # Boilerplate for signal processing code
@@ -24,4 +24,18 @@ from .models import Person, StudentCard, HEI
 #    """
 #    do whatever
 #    return
+
+@receiver(post_delete, sender = Officer, dispatch_uid = "CleanOfficers")
+@receiver(post_delete, sender = StudentCard, dispatch_uid = "CleanStudents")
+def clean_persons(sender, instance, *args, **kwargs):
+    """
+    Signal processor for removing students when they have no other links
+    """
+    if sender == StudentCard: person = instance.student
+    if sender == Officer: person = instance.person
+    if person.is_superuser: return
+    if sender == StudentCard and person.is_officer: return
+    # There are no roles left
+    if not person.is_student: person.delete()
+    return
 

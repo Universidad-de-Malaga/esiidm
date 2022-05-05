@@ -54,25 +54,25 @@ def _send_token(person, token, host, url, time=int(extractor)):
     msg.to = [f'"{person.first_name} {person.last_name}" <{person.email}>']
     hei = person.myHEI
     name = '' if hei is None else hei.name
-    msg.from_email = _(f'Authentication system for {name} <no-reply@{host}>')
-    msg.subject = _(f'Your access token for {name} card management system')
+    msg.from_email = _('Authentication system for {0} <no-reply@{1}>').format(name, host)
+    msg.subject = _('Your access token for {0} card management system').format(name)
     msg.extra_headers = {'Message-Id': '{}@esiidm'.format(uuid.uuid4())}
     # This is a simple message, and it is better if the module has as few
     # external files as possible. And it can be used as a format string.
-    msg.body = _(f"""
-    {person.first_name} {person.last_name}
+    msg.body = _("""
+    {0} {1}
 
-    You are accessing {url}, that requires that you authenticate with
-    the following token in the next {time} minutes.
+    You are accessing {2}, that requires that you authenticate with
+    the following token in the next {3} minutes.
 
-    Token: {token}
+    Token: {4}
 
     You can copy it and paste on the form that has informed you about
     this message.
 
     Thank you.
 
-    """)
+    """).format(person.first_name, person.last_name, url, time, token)
     try:
         msg.send()
         return True

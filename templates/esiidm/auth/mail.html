@@ -22,7 +22,7 @@ It usually is the one in which you received a request for consent.<br>
   {% endif %}
   {% csrf_token %}
   {{ form.as_p }}
-  <button class="btn btn-default" type="submit">{% trans "OK" %}</button>
+  <button class="btn btn-primary" type="submit">{% trans "OK" %}</button>
 </form>
 {% endblock %}
 

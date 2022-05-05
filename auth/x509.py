@@ -14,13 +14,14 @@ If you use a different httpd server, adapt accordingly.
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.translation import ugettext_lazy as _
 
 import hashlib
 
 source_name = 'x509'
 source_attribute = 'SSL_CLIENT_S_DN'
 extractor = '.*'
-description = 'HTTP server x509 certificate authentication'
+description = _('HTTP server x509 certificate authentication')
 
 def authn(request):
     # Who's using us?
