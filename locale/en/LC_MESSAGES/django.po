@@ -1,0 +1,926 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-30 12:57+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: admin.py:33
+msgid "Has accepted"
+msgstr ""
+
+#: admin.py:37 admin.py:53 templates/esiidm/consent.html:38
+msgid "Yes"
+msgstr ""
+
+#: admin.py:37 admin.py:53 templates/esiidm/consent.html:39
+msgid "No"
+msgstr ""
+
+#: admin.py:49
+msgid "Is Invited"
+msgstr ""
+
+#: admin.py:108
+#, python-brace-format
+msgid "Could not send message to {0}"
+msgstr ""
+
+#: admin.py:110
+msgid "Send invite to selected persons"
+msgstr ""
+
+#: admin.py:234 admin.py:332
+msgid "Access control"
+msgstr ""
+
+#: admin.py:239
+msgid "Permissions"
+msgstr ""
+
+#: admin.py:242
+msgid "Administrivia"
+msgstr ""
+
+#: admin.py:327
+msgid "Erasmus"
+msgstr ""
+
+#: admin.py:329
+msgid "European Student Card"
+msgstr ""
+
+#: admin.py:365 admin.py:624 admin.py:810 admin.py:827 auth/__init__.py:14
+#: auth/clave-saml.py:95 auth/clave.py:26 auth/environment.py:27
+#: auth/mail.py:94 auth/mail.py:117 auth/mail.py:123 auth/mail.py:128
+#: auth/mail.py:134 auth/mail.py:149 auth/mail.py:152 auth/mail.py:164
+#: auth/mail.py:182 auth/x509.py:31 views.py:61 views.py:87 views.py:95
+#: views.py:136 views.py:153 views.py:231
+msgid "Access not permitted"
+msgstr ""
+
+#: admin.py:388 admin.py:642
+#, python-brace-format
+msgid "Field {0}"
+msgstr ""
+
+#: admin.py:406
+#, python-brace-format
+msgid ""
+"Person {0} in line {1} does not exist. Not enough information to add a "
+"person."
+msgstr ""
+
+#: admin.py:426
+#, python-brace-format
+msgid "{0}"
+msgstr ""
+
+#: admin.py:456
+#, python-brace-format
+msgid "{0} not saved. Existing data."
+msgstr ""
+
+#: admin.py:463
+#, python-brace-format
+msgid "{0} HEI loaded"
+msgid_plural "{0} HEIs loaded"
+msgstr[0] ""
+msgstr[1] ""
+
+#: admin.py:471 admin.py:679
+#, python-brace-format
+msgid "{0} person created"
+msgid_plural "{0} persons created"
+msgstr[0] ""
+msgstr[1] ""
+
+#: admin.py:483 admin.py:691 admin.py:911
+#, python-brace-format
+msgid "Message to {0} not sent"
+msgstr ""
+
+#: admin.py:671
+#, python-brace-format
+msgid "{0} officer loaded"
+msgid_plural "{0} officers loaded"
+msgstr[0] ""
+msgstr[1] ""
+
+#: admin.py:704 admin.py:941
+msgid "Select HEI"
+msgstr ""
+
+#: admin.py:852
+#, python-brace-format
+msgid "Missing data on line {0}"
+msgstr ""
+
+#: admin.py:857
+#, python-brace-format
+msgid "Bad operation {0}"
+msgstr ""
+
+#: admin.py:891
+#, python-brace-format
+msgid "Card not found on line {0}"
+msgstr ""
+
+#: admin.py:897
+msgid "Data has errors"
+msgstr ""
+
+#: admin.py:916
+#, python-brace-format
+msgid "{0} person added"
+msgid_plural "{0} persons added"
+msgstr[0] ""
+msgstr[1] ""
+
+#: admin.py:924
+#, python-brace-format
+msgid "{0} card added"
+msgid_plural "{0} cards added"
+msgstr[0] ""
+msgstr[1] ""
+
+#: admin.py:930
+#, python-brace-format
+msgid "{0} card deleted"
+msgid_plural "{0} cards deleted"
+msgstr[0] ""
+msgstr[1] ""
+
+#: auth/clave-saml.py:21
+msgid "SAML based authentication for Cl@ve"
+msgstr ""
+
+#: auth/clave-saml.py:41
+msgid "Disco test"
+msgstr ""
+
+#: auth/clave-saml.py:45
+msgid "Logout test"
+msgstr ""
+
+#: auth/clave-saml.py:49
+msgid "Main test"
+msgstr ""
+
+#: auth/clave-saml.py:81
+#, python-brace-format
+msgid "Not found {0}"
+msgstr ""
+
+#: auth/clave-saml.py:84
+#, python-brace-format
+msgid "Status error {0}"
+msgstr ""
+
+#: auth/clave-saml.py:89
+#, python-brace-format
+msgid "Service error {0}"
+msgstr ""
+
+#: auth/mail.py:35
+msgid "No source, extractor is time duration"
+msgstr ""
+
+#: auth/mail.py:37
+msgid "Email token based authentication"
+msgstr ""
+
+#: auth/mail.py:57
+#, python-brace-format
+msgid "Authentication system for {0} <no-reply@{1}>"
+msgstr ""
+
+#: auth/mail.py:58
+#, python-brace-format
+msgid "Your access token for {0} card management system"
+msgstr ""
+
+#: auth/mail.py:62
+#, python-brace-format
+msgid ""
+"\n"
+"    {0} {1}\n"
+"\n"
+"    You are accessing {2}, that requires that you authenticate with\n"
+"    the following token in the next {3} minutes.\n"
+"\n"
+"    Token: {4}\n"
+"\n"
+"    You can copy it and paste on the form that has informed you about\n"
+"    this message.\n"
+"\n"
+"    Thank you.\n"
+"\n"
+"    "
+msgstr ""
+
+#: forms.py:10 forms.py:17 forms.py:24
+msgid "Select delimiter your file uses"
+msgstr ""
+
+#: forms.py:14 forms.py:21 forms.py:28
+msgid "Data file:"
+msgstr ""
+
+#: models.py:38
+msgid "Government issued identifier"
+msgstr ""
+
+#: models.py:43
+msgid "Invitation code"
+msgstr ""
+
+#: models.py:52 models.py:407 models.py:636
+msgid "Responsible person"
+msgstr ""
+
+#: models.py:53 models.py:263 models.py:308 models.py:408 models.py:637
+#: models.py:718
+msgid "Created on"
+msgstr ""
+
+#: models.py:57 models.py:267 models.py:312 models.py:412 models.py:641
+#: models.py:722
+msgid "Modified on"
+msgstr ""
+
+#: models.py:61
+msgid "Invited on"
+msgstr ""
+
+#: models.py:65
+msgid "Accepted on"
+msgstr ""
+
+#: models.py:75 models.py:301
+msgid "Person"
+msgstr ""
+
+#: models.py:76
+msgid "Persons"
+msgstr ""
+
+#: models.py:195
+msgid "Consent is required for the Student Card System"
+msgstr ""
+
+#: models.py:234
+msgid "Source name"
+msgstr ""
+
+#: models.py:240
+msgid "Attribute name"
+msgstr ""
+
+#: models.py:245
+msgid "Extractor"
+msgstr ""
+
+#: models.py:247
+msgid "Regular expression for extracting the value."
+msgstr ""
+
+#: models.py:251
+msgid "Active"
+msgstr ""
+
+#: models.py:252
+msgid "Is the source active?"
+msgstr ""
+
+#: models.py:257
+msgid "Description"
+msgstr ""
+
+#: models.py:259
+msgid "Authentication source description."
+msgstr ""
+
+#: models.py:273
+msgid "Authentication source"
+msgstr ""
+
+#: models.py:274
+msgid "Authentication sources"
+msgstr ""
+
+#: models.py:294
+msgid "Identification source"
+msgstr ""
+
+#: models.py:305
+msgid "Identifier value hash"
+msgstr ""
+
+#: models.py:318 templates/esiidm/consent.html:16
+msgid "Identifier"
+msgstr ""
+
+#: models.py:319
+msgid "Identifiers"
+msgstr ""
+
+#: models.py:335
+msgid "January"
+msgstr ""
+
+#: models.py:336
+msgid "February"
+msgstr ""
+
+#: models.py:337
+msgid "March"
+msgstr ""
+
+#: models.py:338
+msgid "April"
+msgstr ""
+
+#: models.py:339
+msgctxt "month name"
+msgid "May"
+msgstr ""
+
+#: models.py:340
+msgid "June"
+msgstr ""
+
+#: models.py:341
+msgid "July"
+msgstr ""
+
+#: models.py:342
+msgid "August"
+msgstr ""
+
+#: models.py:343
+msgid "September"
+msgstr ""
+
+#: models.py:344
+msgid "October"
+msgstr ""
+
+#: models.py:345
+msgid "November"
+msgstr ""
+
+#: models.py:346
+msgid "December"
+msgstr ""
+
+#: models.py:351
+msgid "Institution name"
+msgstr ""
+
+#: models.py:354
+msgid "Term start month"
+msgstr ""
+
+#: models.py:356
+msgid "Month the term starts on, for expiration date calculations."
+msgstr ""
+
+#: models.py:361
+msgid "Institution web site"
+msgstr ""
+
+#: models.py:362
+msgid "Country"
+msgstr ""
+
+#: models.py:368
+msgid "PIC code"
+msgstr ""
+
+#: models.py:374
+msgid "EUC code"
+msgstr ""
+
+#: models.py:380
+msgid "Erasmus code"
+msgstr ""
+
+#: models.py:386
+msgid "OID code"
+msgstr ""
+
+#: models.py:392
+msgid "SCHAC Home Organization"
+msgstr ""
+
+#: models.py:393
+msgid "Your Internet domain. For ESI"
+msgstr ""
+
+#: models.py:398
+msgid "ESC production key"
+msgstr ""
+
+#: models.py:402
+msgid "ESC sandbox key"
+msgstr ""
+
+#: models.py:418
+msgid "Higher Education Institution"
+msgstr ""
+
+#: models.py:419
+msgid "Higher Education Institutions"
+msgstr ""
+
+#: models.py:480
+msgid "Fatal error calling ESC_Router()"
+msgstr ""
+
+#: models.py:490
+msgid "No information to store"
+msgstr ""
+
+#: models.py:625
+msgid "Person that manages a HEI"
+msgstr ""
+
+#: models.py:631
+msgid "Managed HEI"
+msgstr ""
+
+#: models.py:648
+msgid "Officer"
+msgstr ""
+
+#: models.py:649
+msgid "Officers"
+msgstr ""
+
+#: models.py:694
+msgid "Student who owns the card"
+msgstr ""
+
+#: models.py:700
+msgid "Person's HEI"
+msgstr ""
+
+#: models.py:705
+msgid "European Student Card number"
+msgstr ""
+
+#: models.py:709
+msgid "Student specific part of ESI"
+msgstr ""
+
+#: models.py:717
+msgid "Responsible officer"
+msgstr ""
+
+#: models.py:726
+msgid "ESC registered on"
+msgstr ""
+
+#: models.py:733
+msgid "Card"
+msgstr ""
+
+#: models.py:734
+msgid "Cards"
+msgstr ""
+
+#: templates/esiidm/auth/mail.html:7
+msgid ""
+"\n"
+"Please, enter your email address associated with the system, to recieve an\n"
+"access token.<br>\n"
+"It usually is the one in which you received a request for consent.<br>\n"
+msgstr ""
+
+#: templates/esiidm/auth/mail.html:15
+msgid ""
+"\n"
+"    The token you used was expired. A new one has been sent.<br>\n"
+"    "
+msgstr ""
+
+#: templates/esiidm/auth/mail.html:19
+msgid ""
+"\n"
+"  Please, enter the token you have received from the system.<br>\n"
+"  "
+msgstr ""
+
+#: templates/esiidm/auth/mail.html:25
+msgid "OK"
+msgstr ""
+
+#: templates/esiidm/auth_sources.html:6
+msgid ""
+"\n"
+"Please, select one of the following authentication methods\n"
+msgstr ""
+
+#: templates/esiidm/consent.html:5
+msgid ""
+"\n"
+"<h3>Welcome to the European Student Card and Identifier management system</"
+"h3>\n"
+"It is important the you consent that your personal information is processed\n"
+"in the system before using it.<br>\n"
+"This is what the system knows about you:<br>\n"
+msgstr ""
+
+#: templates/esiidm/consent.html:12
+msgid "Name"
+msgstr ""
+
+#: templates/esiidm/consent.html:13
+msgid "Family name"
+msgstr ""
+
+#: templates/esiidm/consent.html:14
+msgid "Email"
+msgstr ""
+
+#: templates/esiidm/consent.html:20
+#, python-format
+msgid ""
+"\n"
+"Also, the system will create a link to the identification received vía\n"
+"%(source.description)s but no extra personal information will be stored.\n"
+msgstr ""
+
+#: templates/esiidm/consent.html:27
+msgid ""
+"\n"
+"Do you agree with the information being stored to provide you with an "
+"European\n"
+"Student Card and Identifier?\n"
+msgstr ""
+
+#: templates/esiidm/consent.html:32
+msgid ""
+"\n"
+"Do you agree with the information being stored to allow you access and\n"
+"manage the system?\n"
+msgstr ""
+
+#: templates/esiidm/expired.html:5
+msgid "Expired invitation"
+msgstr ""
+
+#: templates/esiidm/expired.html:7
+msgid ""
+"\n"
+"The invitation you have used is expired.<br>\n"
+"You will receive a fresh one you can use.\n"
+msgstr ""
+
+#: templates/esiidm/expired.html:12
+msgid ""
+"\n"
+"The invitation you have used is expired.<br>\n"
+"But sending a new one to the email address the system has for you, has "
+"failed.\n"
+msgstr ""
+
+#: templates/esiidm/index.html:5 templates/esiidm/unknown.html:5
+msgid "Welcome"
+msgstr ""
+
+#: templates/esiidm/index.html:17
+msgid "Close session"
+msgstr ""
+
+#: templates/esiidm/index.html:20
+msgid ""
+"\n"
+"You can authenticate to the system using:\n"
+msgstr ""
+
+#: templates/esiidm/index.html:29
+msgid ""
+"\n"
+"If you want to use a new source for authenticating\n"
+msgstr ""
+
+#: templates/esiidm/index.html:32
+msgid "request a new one"
+msgstr ""
+
+#: templates/esiidm/index.html:33
+msgid ""
+"\n"
+"that will be sent to the above email address\n"
+msgstr ""
+
+#: templates/esiidm/index.html:38
+msgid ""
+"\n"
+"You have permission to manage the system\n"
+msgstr ""
+
+#: templates/esiidm/index.html:41
+msgid "via the admin panel"
+msgstr ""
+
+#: templates/esiidm/index.html:44
+msgid ""
+"\n"
+"You can manage students for the following HEI:\n"
+msgstr ""
+
+#: templates/esiidm/index.html:50
+msgid "get cards in PDF"
+msgstr ""
+
+#: templates/esiidm/index.html:68
+msgid "Student Number"
+msgstr ""
+
+#: templates/esiidm/index.html:70
+msgid "Card Number"
+msgstr ""
+
+#: templates/esiidm/load_cards.html:5
+msgid "Student cards bulk load"
+msgstr ""
+
+#: templates/esiidm/load_cards.html:7 templates/esiidm/load_heis.html:7
+#: templates/esiidm/load_officers.html:20
+msgid ""
+"\n"
+"        The CSV file MUST (RFC2119) have field names as columns on\n"
+"        the first row.<br />\n"
+"        Fields MAY (RFC2119) be in any order.\n"
+"        "
+msgstr ""
+
+#: templates/esiidm/load_cards.html:14 templates/esiidm/load_heis.html:14
+#: templates/esiidm/load_officers.html:27
+msgid ""
+"\n"
+"        The CSV file MUST (RFC2119) have a minimum set of fields:\n"
+"        "
+msgstr ""
+
+#: templates/esiidm/load_cards.html:21
+msgid "contains the student specific part of the ESI"
+msgstr ""
+
+#: templates/esiidm/load_cards.html:25
+msgid "student's given name"
+msgstr ""
+
+#: templates/esiidm/load_cards.html:29
+msgid "student's family name"
+msgstr ""
+
+#: templates/esiidm/load_cards.html:33
+msgid "student's email"
+msgstr ""
+
+#: templates/esiidm/load_cards.html:37 templates/esiidm/load_heis.html:37
+#: templates/esiidm/load_officers.html:46
+msgid ""
+"\n"
+"        The rows MAY (RFC2119) also contain these optional fields:\n"
+"        "
+msgstr ""
+
+#: templates/esiidm/load_cards.html:44
+msgid "government issued identifier for the student"
+msgstr ""
+
+#: templates/esiidm/load_cards.html:48
+msgid "if present, value MUST (RFC 2119) be either"
+msgstr ""
+
+#: templates/esiidm/load_cards.html:51
+msgid ""
+"\n"
+"              D for deleting the card if it belongs to the student\n"
+"              "
+msgstr ""
+
+#: templates/esiidm/load_cards.html:56
+msgid ""
+"\n"
+"              C for creating a new card, this is the default if absent\n"
+"              "
+msgstr ""
+
+#: templates/esiidm/load_cards.html:64
+msgid ""
+"\n"
+"      Persons are created as needed and receive an invitation over email\n"
+"      requesting consent.\n"
+"      "
+msgstr ""
+
+#: templates/esiidm/load_cards.html:74 templates/esiidm/load_heis.html:90
+#: templates/esiidm/load_officers.html:100
+msgid "Please, make sure you select the right delimiter."
+msgstr ""
+
+#: templates/esiidm/load_cards.html:76 templates/esiidm/load_heis.html:92
+#: templates/esiidm/load_officers.html:102
+msgid "Upload CSV"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:5
+msgid "HEI bulk load"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:21
+msgid "HEI name"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:25
+msgid "HEI country ISO two letter code"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:29
+msgid "SCHAC Home Organization (HEI Internet domain)"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:33
+msgid "email address for the main HEI officer"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:44
+msgid "HEI PIC code (required for ESC)"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:48
+msgid "HEI EUC code"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:52
+msgid "HEI Erasmus code"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:56
+msgid "HEI Erasmus OID"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:60
+msgid "HEI main web page"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:64
+msgid "month when term starts (1 through 12)"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:68
+msgid "Main officer's given name"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:72
+msgid "Main officer's family name"
+msgstr ""
+
+#: templates/esiidm/load_heis.html:76
+msgid ""
+"\n"
+"        If first_name and last_name are present,\n"
+"        the person is created in the system if needed.\n"
+"        "
+msgstr ""
+
+#: templates/esiidm/load_heis.html:81 templates/esiidm/load_officers.html:91
+msgid ""
+"\n"
+"        Persons receive an invitation via email for activating the account.\n"
+"        "
+msgstr ""
+
+#: templates/esiidm/load_officers.html:5
+msgid "Officer bulk load"
+msgstr ""
+
+#: templates/esiidm/load_officers.html:7
+msgid ""
+"\n"
+"      An officer is just a person that has special status and is linked to\n"
+"      a HEI (or more) whose cards and students is authorised to manage.\n"
+"      "
+msgstr ""
+
+#: templates/esiidm/load_officers.html:13
+msgid ""
+"\n"
+"      The first officer for a HEI may be loaded as an unlinked person and "
+"the link\n"
+"      is later established when the HEI is created.\n"
+"      "
+msgstr ""
+
+#: templates/esiidm/load_officers.html:34
+msgid "officer's given name"
+msgstr ""
+
+#: templates/esiidm/load_officers.html:38
+msgid "officer's family name"
+msgstr ""
+
+#: templates/esiidm/load_officers.html:42
+msgid "officer's email"
+msgstr ""
+
+#: templates/esiidm/load_officers.html:53
+msgid "government issued identifier for the person"
+msgstr ""
+
+#: templates/esiidm/load_officers.html:58
+msgid "officer's HEI schacHomeOrganization"
+msgstr ""
+
+#: templates/esiidm/load_officers.html:62
+msgid "officer's HEI PIC code"
+msgstr ""
+
+#: templates/esiidm/load_officers.html:66
+msgid "officer's HEI EUC code"
+msgstr ""
+
+#: templates/esiidm/load_officers.html:70
+msgid "officer's HEI ERC code"
+msgstr ""
+
+#: templates/esiidm/load_officers.html:74
+msgid "officer's HEI OID code"
+msgstr ""
+
+#: templates/esiidm/load_officers.html:80
+msgid ""
+"\n"
+"        Only one of SHO, PIC, EUC, ERC or OID is required for linking\n"
+"        the officer to the HEI.\n"
+"        "
+msgstr ""
+
+#: templates/esiidm/load_officers.html:85
+msgid ""
+"\n"
+"        If there is no HEI, the person is created in the system\n"
+"        with needed privileges but no associated HEI.\n"
+"        "
+msgstr ""
+
+#: templates/esiidm/not_consent.html:5
+msgid ""
+"\n"
+"<h3>Processing of personal information rejected</h3>\n"
+"Your declination of consent has been registered. Thank you.<br>\n"
+"Please note that you will not be able to use the system.<br>\n"
+msgstr ""
+
+#: templates/esiidm/unknown.html:15
+msgid "You have to"
+msgstr ""
+
+#: templates/esiidm/unknown.html:17
+msgid "authenticate yourself"
+msgstr ""
+
+#: templates/esiidm/unknown.html:19
+msgid "to use the system."
+msgstr ""
+
+#: views.py:206
+msgid "Link for adding a new autentication"
+msgstr ""
+
+#: views.py:209
+#, python-brace-format
+msgid "Link sent to {0}"
+msgstr ""
+
+#: views.py:210
+msgid "Your session has been closed."
+msgstr ""
+
+#: views.py:213
+#, python-brace-format
+msgid "Send link to {0} failed."
+msgstr ""
+
+#: views.py:233
+msgid "Access not permitted."
+msgstr ""

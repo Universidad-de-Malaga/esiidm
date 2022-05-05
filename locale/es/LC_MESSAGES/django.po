@@ -1,0 +1,1000 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-11-13 12:46+0100\n"
+"PO-Revision-Date: 2022-02-15 15:30-0015\n"
+"Last-Translator: Fernando Bautista Fernández <fernando.bautista@sepie.es>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Translated-Using: django-rosetta 0.9.7\n"
+
+#: admin.py:33
+msgid "Has accepted"
+msgstr "Ha aceptado"
+
+#: admin.py:37 admin.py:53 templates/esiidm/consent.html:38
+msgid "Yes"
+msgstr "Sí"
+
+#: admin.py:37 admin.py:53 templates/esiidm/consent.html:39
+msgid "No"
+msgstr "No"
+
+#: admin.py:49
+msgid "Is Invited"
+msgstr "Ha sido invitado"
+
+#: admin.py:108
+#, python-brace-format
+msgid "Could not send message to {0}"
+msgstr "No se puede enviar mensaje a {0}"
+
+#: admin.py:110
+msgid "Send invite to selected persons"
+msgstr "Enviar invitación a las personas seleccionadas"
+
+#: admin.py:234 admin.py:332
+msgid "Access control"
+msgstr "Control de acceso"
+
+#: admin.py:239
+msgid "Permissions"
+msgstr "Permisos"
+
+#: admin.py:242
+msgid "Administrivia"
+msgstr "Información administrativa"
+
+#: admin.py:327
+msgid "Erasmus"
+msgstr "Erasmus"
+
+#: admin.py:329
+msgid "European Student Card"
+msgstr "Tarjeta Europea de Estudiante"
+
+#: admin.py:365 admin.py:624 admin.py:810 admin.py:827 auth/__init__.py:14
+#: auth/clave.py:26 auth/environment.py:27 auth/mail.py:94 auth/mail.py:117
+#: auth/mail.py:123 auth/mail.py:128 auth/mail.py:134 auth/mail.py:149
+#: auth/mail.py:152 auth/mail.py:164 auth/mail.py:182 auth/x509.py:31
+#: views.py:61 views.py:87 views.py:95 views.py:136 views.py:153 views.py:231
+msgid "Access not permitted"
+msgstr "Acceso denegado"
+
+#: admin.py:388 admin.py:642
+#, python-brace-format
+#| msgid "Missing data on line {0}"
+msgid "Field {0} missing on line {1}"
+msgstr "Faltan el campo {0 } en la línea {1}"
+
+#: admin.py:406
+#, python-brace-format
+msgid ""
+"Person {0} in line {1} does not exist. Not enough information to add a "
+"person."
+msgstr ""
+"La persona {0} en la línea {1} no existe. No hay información suficiente para"
+" añadir una persona. "
+
+#: admin.py:426
+#, python-brace-format
+msgid "{0} already exists in line {1}"
+msgstr "{0} ya existe en la línea {1}."
+
+#: admin.py:456
+#, python-brace-format
+#| msgid "{0} not saved. Existing data."
+msgid "{0} not saved. Existing data in line {1}."
+msgstr "no se salvó {0}. Ya existían datos en la línea {1}."
+
+#: admin.py:463
+#, python-brace-format
+msgid "{0} HEI loaded"
+msgid_plural "{0} HEIs loaded"
+msgstr[0] "Cargada {0} HEI"
+msgstr[1] "Cargadas {0} HEIs"
+
+#: admin.py:471 admin.py:679
+#, python-brace-format
+msgid "{0} person created"
+msgid_plural "{0} persons created"
+msgstr[0] "{0} persona creada"
+msgstr[1] "{0} personas creadas"
+
+#: admin.py:483 admin.py:691 admin.py:911
+#, python-brace-format
+msgid "Message to {0} not sent"
+msgstr "Mensaje para {0} no enviada"
+
+#: admin.py:671
+#, python-brace-format
+msgid "{0} officer loaded"
+msgid_plural "{0} officers loaded"
+msgstr[0] "cargado {0} responsable"
+msgstr[1] "cargados {0} responsables"
+
+#: admin.py:704 admin.py:941
+msgid "Select HEI"
+msgstr "Selecciona HEI"
+
+#: admin.py:852
+#, python-brace-format
+msgid "Missing data on line {0}"
+msgstr "Faltan datos en la línea {0}"
+
+#: admin.py:857
+#, python-brace-format
+#| msgid "Bad operation {0}"
+msgid "Bad operation {0} on line {1}"
+msgstr "Operación incorrecta {0} en la línea {1}."
+
+#: admin.py:891
+#, python-brace-format
+msgid "Card not found on line {0}"
+msgstr "No se encontró la tarjeta en la línea {0}"
+
+#: admin.py:897
+msgid "Data has errors"
+msgstr "Los datos contienen errores"
+
+#: admin.py:916
+#, python-brace-format
+msgid "{0} person added"
+msgid_plural "{0} persons added"
+msgstr[0] "{0} persona añadida"
+msgstr[1] "{0} personas añadidas"
+
+#: admin.py:924
+#, python-brace-format
+msgid "{0} card added"
+msgid_plural "{0} cards added"
+msgstr[0] "añadida {0} tarjeta"
+msgstr[1] "{0} tarjetas añadidas"
+
+#: admin.py:930
+#, python-brace-format
+msgid "{0} card deleted"
+msgid_plural "{0} cards deleted"
+msgstr[0] "borrada {0} tarjeta"
+msgstr[1] "{0} tarjetas borradas"
+
+#: auth/mail.py:35
+msgid "No source, extractor is time duration"
+msgstr ""
+"No usa un atributo origen, el valor del extractor es la duración del código "
+"de acceso (token)."
+
+#: auth/mail.py:37
+msgid "Email token based authentication"
+msgstr "Autenticación basada en códigos de acceso (tokens)"
+
+#: auth/mail.py:57
+#, python-brace-format
+msgid "Authentication system for {0} <no-reply@{1}>"
+msgstr "Sistema de autenticación de {0} <no-reply@{1}>"
+
+#: auth/mail.py:58
+#, python-brace-format
+msgid "Your access token for {0} card management system"
+msgstr "Su código de acceso para el sistema de gestión de tarjetas {0}"
+
+#: auth/mail.py:62
+#, python-brace-format
+msgid ""
+"\n"
+"    {0} {1}\n"
+"\n"
+"    You are accessing {2}, that requires that you authenticate with\n"
+"    the following token in the next {3} minutes.\n"
+"\n"
+"    Token: {4}\n"
+"\n"
+"    You can copy it and paste on the form that has informed you about\n"
+"    this message.\n"
+"\n"
+"    Thank you.\n"
+"\n"
+"    "
+msgstr ""
+"\n"
+"{0} {1}\n"
+"Está accediendo a {2}, que requiere que se identifique con el siguiente token en los próximos {3} minutos.\n"
+"\n"
+"Código de acceso (Token): {4}\n"
+"\n"
+"Puede copiar y pegar en el formulario que le ha informado de este mensaje.\n"
+"\n"
+"Gracias."
+
+#: forms.py:10 forms.py:17 forms.py:24
+msgid "Select delimiter your file uses"
+msgstr "Seleccione el delimitador que utiliza en su fichero"
+
+#: forms.py:14 forms.py:21 forms.py:28
+msgid "Data file:"
+msgstr "Fichero de datos:"
+
+#: models.py:38
+msgid "Government issued identifier"
+msgstr "Identificador nacional (DNI, NIF)"
+
+#: models.py:43
+msgid "Invitation code"
+msgstr "Código de invitación"
+
+#: models.py:52 models.py:407 models.py:636
+msgid "Responsible person"
+msgstr "Persona responsable"
+
+#: models.py:53 models.py:263 models.py:308 models.py:408 models.py:637
+#: models.py:718
+msgid "Created on"
+msgstr "Creado con fecha"
+
+#: models.py:57 models.py:267 models.py:312 models.py:412 models.py:641
+#: models.py:722
+msgid "Modified on"
+msgstr "Modificado con fecha"
+
+#: models.py:61
+msgid "Invited on"
+msgstr "Invitado con fecha"
+
+#: models.py:65
+msgid "Accepted on"
+msgstr "Aceptado en la fecha"
+
+#: models.py:75 models.py:301
+msgid "Person"
+msgstr "Persona"
+
+#: models.py:76
+msgid "Persons"
+msgstr "Personas"
+
+#: models.py:195
+msgid "Consent is required for the Student Card System"
+msgstr "Se requiere consentimiento para el Sistema de Tarjetas de Estudiantes"
+
+#: models.py:234
+msgid "Source name"
+msgstr "Nombre fuente"
+
+#: models.py:240
+msgid "Attribute name"
+msgstr "Nombre del atributo"
+
+#: models.py:245
+msgid "Extractor"
+msgstr "Extractor"
+
+#: models.py:247
+msgid "Regular expression for extracting the value."
+msgstr "Expresión regular para extraer el valor"
+
+#: models.py:251
+msgid "Active"
+msgstr "Activo"
+
+#: models.py:252
+msgid "Is the source active?"
+msgstr "¿Está la fuente activa?"
+
+#: models.py:257
+msgid "Description"
+msgstr "Descripción"
+
+#: models.py:259
+msgid "Authentication source description."
+msgstr "Descripción de la fuente de autenticación."
+
+#: models.py:273
+msgid "Authentication source"
+msgstr "Fuente de autenticación"
+
+#: models.py:274
+msgid "Authentication sources"
+msgstr "Fuentes de autenticación"
+
+#: models.py:294
+msgid "Identification source"
+msgstr "Fuente de identificación"
+
+#: models.py:305
+msgid "Identifier value hash"
+msgstr "Valor del hash del identificador"
+
+#: models.py:318 templates/esiidm/consent.html:16
+msgid "Identifier"
+msgstr "Identificador"
+
+#: models.py:319
+msgid "Identifiers"
+msgstr "Identificadores"
+
+#: models.py:335
+msgid "January"
+msgstr "enero"
+
+#: models.py:336
+msgid "February"
+msgstr "febrero"
+
+#: models.py:337
+msgid "March"
+msgstr "marzo"
+
+#: models.py:338
+msgid "April"
+msgstr "abril"
+
+#: models.py:339
+msgctxt "month name"
+msgid "May"
+msgstr "mayo"
+
+#: models.py:340
+msgid "June"
+msgstr "junio"
+
+#: models.py:341
+msgid "July"
+msgstr "julio"
+
+#: models.py:342
+msgid "August"
+msgstr "agosto"
+
+#: models.py:343
+msgid "September"
+msgstr "septiembre"
+
+#: models.py:344
+msgid "October"
+msgstr "octubre"
+
+#: models.py:345
+msgid "November"
+msgstr "noviembre"
+
+#: models.py:346
+msgid "December"
+msgstr "Diciembre"
+
+#: models.py:351
+msgid "Institution name"
+msgstr "Nombre de la institución"
+
+#: models.py:354
+msgid "Term start month"
+msgstr "Mes de comienzo del curso"
+
+#: models.py:356
+msgid "Month the term starts on, for expiration date calculations."
+msgstr "Mes de comienzo del curso, para cálculo de la fecha de expiración."
+
+#: models.py:361
+msgid "Institution web site"
+msgstr "Sitio web de la institución"
+
+#: models.py:362
+msgid "Country"
+msgstr "País"
+
+#: models.py:368
+msgid "PIC code"
+msgstr "Código PIC"
+
+#: models.py:374
+msgid "EUC code"
+msgstr "Código ECHE"
+
+#: models.py:380
+msgid "Erasmus code"
+msgstr "Código Erasmus"
+
+#: models.py:386
+msgid "OID code"
+msgstr "Código OID"
+
+#: models.py:392
+msgid "SCHAC Home Organization"
+msgstr "SCHAC Home Organization"
+
+#: models.py:393
+msgid "Your Internet domain. For ESI"
+msgstr "Su dominio de Internet. Para el ESI"
+
+#: models.py:398
+msgid "ESC production key"
+msgstr "Clave de producción de ESC"
+
+#: models.py:402
+msgid "ESC sandbox key"
+msgstr "Clave de pruebas de ESC"
+
+#: models.py:418
+msgid "Higher Education Institution"
+msgstr "Institución de Educación Superior"
+
+#: models.py:419
+msgid "Higher Education Institutions"
+msgstr "Instituciones de Educación Superior"
+
+#: models.py:480
+msgid "Fatal error calling ESC_Router()"
+msgstr "Error fatal llamando a ESC_Router()"
+
+#: models.py:490
+msgid "No information to store"
+msgstr "No hay información que almacenar"
+
+#: models.py:625
+msgid "Person that manages a HEI"
+msgstr "Persona que gestiona una HEI"
+
+#: models.py:631
+msgid "Managed HEI"
+msgstr "HEI gestionada"
+
+#: models.py:648
+msgid "Officer"
+msgstr "Responsable del sistema en la HEI"
+
+#: models.py:649
+msgid "Officers"
+msgstr "Responsable del sistema en la HEI"
+
+#: models.py:694
+msgid "Student who owns the card"
+msgstr "Estudiante titular de la tarjeta"
+
+#: models.py:700
+msgid "Person's HEI"
+msgstr "Institución de la persona"
+
+#: models.py:705
+msgid "European Student Card number"
+msgstr "Número de la Tarjeta Europea de Estudiante"
+
+#: models.py:709
+msgid "Student specific part of ESI"
+msgstr "Parte específica del estudiante en el ESI"
+
+#: models.py:717
+msgid "Responsible officer"
+msgstr "Responsable en la HEI"
+
+#: models.py:726
+msgid "ESC registered on"
+msgstr "ESC registrada con fecha"
+
+#: models.py:733
+msgid "Card"
+msgstr "Tarjeta"
+
+#: models.py:734
+msgid "Cards"
+msgstr "Tarjetas"
+
+#: templates/esiidm/auth/mail.html:7
+msgid ""
+"\n"
+"Please, enter your email address associated with the system, to recieve an\n"
+"access token.<br>\n"
+"It usually is the one in which you received a request for consent.<br>\n"
+msgstr ""
+"\n"
+"Por favor, introduzca su dirección de correo asociada al sistema, y recibirá un código de acceso.<br>\n"
+"Habitualmente es el que recibió para solicitarle consentimiento.<br>\n"
+
+#: templates/esiidm/auth/mail.html:15
+msgid ""
+"\n"
+"    The token you used was expired. A new one has been sent.<br>\n"
+"    "
+msgstr ""
+"\n"
+"El código de acceso (token) que usó ha expirado. Se le acaba de enviar uno nuevo.<br>"
+
+#: templates/esiidm/auth/mail.html:19
+msgid ""
+"\n"
+"  Please, enter the token you have received from the system.<br>\n"
+"  "
+msgstr ""
+"\n"
+"Por favor, introduzca el código de acceso (token)que ha recibido del sistema.<br>"
+
+#: templates/esiidm/auth/mail.html:25
+msgid "OK"
+msgstr "OK"
+
+#: templates/esiidm/auth_sources.html:6
+msgid ""
+"\n"
+"Please, select one of the following authentication methods\n"
+msgstr ""
+"\n"
+"Por favor, seleccione uno de los siguientes métodos de autenticación\n"
+
+#: templates/esiidm/consent.html:5
+msgid ""
+"\n"
+"<h3>Welcome to the European Student Card and Identifier management system</h3>\n"
+"It is important the you consent that your personal information is processed\n"
+"in the system before using it.<br>\n"
+"This is what the system knows about you:<br>\n"
+msgstr ""
+"\n"
+"<h3>Bienvenido al sistema de gestión de la Tarjeta e Identificador Europeo de Estudiante </h3>\n"
+"Es importante que de su consentimiento para que tu información personal sea procesada por el sistema antes de usarla.<br>\n"
+"Esto es lo que el sistema conoce de ti:<br>\n"
+
+#: templates/esiidm/consent.html:12
+msgid "Name"
+msgstr "Nombre"
+
+#: templates/esiidm/consent.html:13
+msgid "Family name"
+msgstr "Apellidos"
+
+#: templates/esiidm/consent.html:14
+msgid "Email"
+msgstr "Correo electrónico"
+
+#: templates/esiidm/consent.html:20
+#, python-format
+msgid ""
+"\n"
+"Also, the system will create a link to the identification received vía\n"
+"%(source.description)s but no extra personal information will be stored.\n"
+msgstr ""
+"\n"
+"Además, el sistema creará un vínculo con la identificación recibida a través de %(source.description)s sin que ninguna información personal adicional sea almacenada.\n"
+
+#: templates/esiidm/consent.html:27
+msgid ""
+"\n"
+"Do you agree with the information being stored to provide you with an European\n"
+"Student Card and Identifier?\n"
+msgstr ""
+"\n"
+"¿Estás de acuerdo con que la información se almacene para poder proporcionar una Tarjeta e Identificador Europeo de Estudiante?\n"
+
+#: templates/esiidm/consent.html:32
+msgid ""
+"\n"
+"Do you agree with the information being stored to allow you access and\n"
+"manage the system?\n"
+msgstr ""
+"\n"
+"¿Estás de acuerdo con que la información se almacene para ofrecerle acceso al sistema de gestión?\n"
+
+#: templates/esiidm/expired.html:5
+msgid "Expired invitation"
+msgstr "Invitación expirada"
+
+#: templates/esiidm/expired.html:7
+msgid ""
+"\n"
+"The invitation you have used is expired.<br>\n"
+"You will receive a fresh one you can use.\n"
+msgstr ""
+"\n"
+"La invitación usada ha expirado.<br>Recibirá una nueva que pueda usar.\n"
+
+#: templates/esiidm/expired.html:12
+msgid ""
+"\n"
+"The invitation you have used is expired.<br>\n"
+"But sending a new one to the email address the system has for you, has failed.\n"
+msgstr ""
+"\n"
+"La invitación que ha usado ha expirado.<br> Sin embargo, al enviar una nueva a la dirección de correo electrónico que tiene el sistema ha fallado.\n"
+
+#: templates/esiidm/index.html:5 templates/esiidm/unknown.html:5
+msgid "Welcome"
+msgstr "Bienvenido"
+
+#: templates/esiidm/index.html:17
+msgid "Close session"
+msgstr "Cerrar sesión"
+
+#: templates/esiidm/index.html:20
+msgid ""
+"\n"
+"You can authenticate to the system using:\n"
+msgstr ""
+"\n"
+"Puede autenticarse en el sistema usando:\n"
+
+#: templates/esiidm/index.html:29
+msgid ""
+"\n"
+"If you want to use a new source for authenticating\n"
+msgstr ""
+"\n"
+"Si quiere utilizar una nueva fuente para autenticarse\n"
+
+#: templates/esiidm/index.html:32
+msgid "request a new one"
+msgstr "solicite una nueva invitación"
+
+#: templates/esiidm/index.html:33
+msgid ""
+"\n"
+"that will be sent to the above email address\n"
+msgstr ""
+"\n"
+"que será enviada a la dirección de correo que aparece más arriba\n"
+
+#: templates/esiidm/index.html:38
+msgid ""
+"\n"
+"You have permission to manage the system\n"
+msgstr ""
+"\n"
+"Tiene permiso para gestionar el sistema\n"
+
+#: templates/esiidm/index.html:41
+msgid "via the admin panel"
+msgstr "a través del panel de administrador"
+
+#: templates/esiidm/index.html:44
+msgid ""
+"\n"
+"You can manage students for the following HEI:\n"
+msgstr ""
+"\n"
+"Puedes gestionar estudiantes de la siguiente institución:\n"
+
+#: templates/esiidm/index.html:50
+msgid "get cards in PDF"
+msgstr "obtener tarjetas en PDF"
+
+#: templates/esiidm/index.html:68
+msgid "Student Number"
+msgstr "Número de Estudiante"
+
+#: templates/esiidm/index.html:70
+msgid "Card Number"
+msgstr "Número de Tarjeta"
+
+#: templates/esiidm/load_cards.html:5
+msgid "Student cards bulk load"
+msgstr "Carga masiva de tarjetas de estudiante"
+
+#: templates/esiidm/load_cards.html:7 templates/esiidm/load_heis.html:7
+#: templates/esiidm/load_officers.html:20
+msgid ""
+"\n"
+"        The CSV file MUST (RFC2119) have field names as columns on\n"
+"        the first row.<br />\n"
+"        Fields MAY (RFC2119) be in any order.\n"
+"        "
+msgstr ""
+"\n"
+"El fichero CSV DEBE (RFC2119) contener nombres de campo como encabezado de columnas en la primera fila.<br /> \n"
+"Los campos PUEDEN (RFC2119) aparecer en cualquier orden."
+
+#: templates/esiidm/load_cards.html:14 templates/esiidm/load_heis.html:14
+#: templates/esiidm/load_officers.html:27
+msgid ""
+"\n"
+"        The CSV file MUST (RFC2119) have a minimum set of fields:\n"
+"        "
+msgstr ""
+"\n"
+"El fichero CSV DEBE (RFC2119) tener un conjunto mínimo de campos:"
+
+#: templates/esiidm/load_cards.html:21
+msgid "contains the student specific part of the ESI"
+msgstr "contiene la parte específica del estudiante del ESI"
+
+#: templates/esiidm/load_cards.html:25
+msgid "student's given name"
+msgstr "nombre de estudiante"
+
+#: templates/esiidm/load_cards.html:29
+msgid "student's family name"
+msgstr "apellidos del estudiante"
+
+#: templates/esiidm/load_cards.html:33
+msgid "student's email"
+msgstr "dirección de correo electrónico del estudiante"
+
+#: templates/esiidm/load_cards.html:37 templates/esiidm/load_heis.html:37
+#: templates/esiidm/load_officers.html:46
+msgid ""
+"\n"
+"        The rows MAY (RFC2119) also contain these optional fields:\n"
+"        "
+msgstr ""
+"\n"
+"Las filas PUEDEN (RFC2119) contener los siguientes campos opcionales:"
+
+#: templates/esiidm/load_cards.html:44
+msgid "government issued identifier for the student"
+msgstr "identificador expedido por el gobierno para el estudiante"
+
+#: templates/esiidm/load_cards.html:48
+msgid "if present, value MUST (RFC 2119) be either"
+msgstr "si está presente, el valor DEBE (RFC 2119) ser"
+
+#: templates/esiidm/load_cards.html:51
+msgid ""
+"\n"
+"              D for deleting the card if it belongs to the student\n"
+"              "
+msgstr ""
+"\n"
+"D para borrar la tarjeta si pertenece al estudiante"
+
+#: templates/esiidm/load_cards.html:56
+msgid ""
+"\n"
+"              C for creating a new card, this is the default if absent\n"
+"              "
+msgstr ""
+"\n"
+"C para crear una nueva tarjeta, que será la opción por defecto"
+
+#: templates/esiidm/load_cards.html:64
+msgid ""
+"\n"
+"      Persons are created as needed and receive an invitation over email\n"
+"      requesting consent.\n"
+"      "
+msgstr ""
+"\n"
+"Las personas son creadas según sea necesario y reciben una invitación mediante correo electrónico solicitando su consentimiento."
+
+#: templates/esiidm/load_cards.html:74 templates/esiidm/load_heis.html:90
+#: templates/esiidm/load_officers.html:100
+msgid "Please, make sure you select the right delimiter."
+msgstr "Por favor, asegúrese de seleccionar el delimitador correcto."
+
+#: templates/esiidm/load_cards.html:76 templates/esiidm/load_heis.html:92
+#: templates/esiidm/load_officers.html:102
+msgid "Upload CSV"
+msgstr "Cargar CSV"
+
+#: templates/esiidm/load_heis.html:5
+msgid "HEI bulk load"
+msgstr "Carga masiva de HEIs"
+
+#: templates/esiidm/load_heis.html:21
+msgid "HEI name"
+msgstr "nombre de la HEI"
+
+#: templates/esiidm/load_heis.html:25
+msgid "HEI country ISO two letter code"
+msgstr "Código ISO de dos letras para el país de la HEI"
+
+#: templates/esiidm/load_heis.html:29
+msgid "SCHAC Home Organization (HEI Internet domain)"
+msgstr "SCHAC Home ORganization (dominio internet de la HEI)"
+
+#: templates/esiidm/load_heis.html:33
+msgid "email address for the main HEI officer"
+msgstr "dirección de correo para el responsable de sistema en la HEI"
+
+#: templates/esiidm/load_heis.html:44
+msgid "HEI PIC code (required for ESC)"
+msgstr "Código PIC de la HEI (requerido para la ESC)"
+
+#: templates/esiidm/load_heis.html:48
+msgid "HEI EUC code"
+msgstr "Código ECHE de la HEI"
+
+#: templates/esiidm/load_heis.html:52
+msgid "HEI Erasmus code"
+msgstr "Código Erasmus de la HEI"
+
+#: templates/esiidm/load_heis.html:56
+msgid "HEI Erasmus OID"
+msgstr "OID Erasmus de la HEI"
+
+#: templates/esiidm/load_heis.html:60
+msgid "HEI main web page"
+msgstr "Página web principal de la HEI"
+
+#: templates/esiidm/load_heis.html:64
+msgid "month when term starts (1 through 12)"
+msgstr "mes en el que comienza el curso (del 1 al 12)"
+
+#: templates/esiidm/load_heis.html:68
+msgid "Main officer's given name"
+msgstr "Nombre del responsable del sistema en la HEI"
+
+#: templates/esiidm/load_heis.html:72
+msgid "Main officer's family name"
+msgstr "Apellido del responsable del sistema en la HEI"
+
+#: templates/esiidm/load_heis.html:76
+msgid ""
+"\n"
+"        If first_name and last_name are present,\n"
+"        the person is created in the system if needed.\n"
+"        "
+msgstr ""
+"\n"
+"Si están presentes first_name y last_name, la persona se crea en el sistema si es necesario."
+
+#: templates/esiidm/load_heis.html:81 templates/esiidm/load_officers.html:91
+msgid ""
+"\n"
+"        Persons receive an invitation via email for activating the account.\n"
+"        "
+msgstr ""
+"\n"
+"Las personas reciben una invitación por correo para activar la cuenta."
+
+#: templates/esiidm/load_officers.html:5
+msgid "Officer bulk load"
+msgstr "Carga masiva de responsable del sistema en las HEIs"
+
+#: templates/esiidm/load_officers.html:7
+msgid ""
+"\n"
+"      An officer is just a person that has special status and is linked to\n"
+"      a HEI (or more) whose cards and students is authorised to manage.\n"
+"      "
+msgstr ""
+"\n"
+"Un responsable del sistema en la HEI es sólo una persona con un estado especial que se vincula a una o varias HEIs, cuyas tarjetas y estudiantes tiene autorización para administrar."
+
+#: templates/esiidm/load_officers.html:13
+msgid ""
+"\n"
+"      The first officer for a HEI may be loaded as an unlinked person and the link\n"
+"      is later established when the HEI is created.\n"
+"      "
+msgstr ""
+"\n"
+"El responsable del sistema en la HEI principal puede cargarse como una persona no enlazada, y enlazarse posteriormente cuando la HEI es creada."
+
+#: templates/esiidm/load_officers.html:34
+msgid "officer's given name"
+msgstr "nombre del responsable del sistema en la HEI"
+
+#: templates/esiidm/load_officers.html:38
+msgid "officer's family name"
+msgstr "apellidos del responsable del sistema en la HEI"
+
+#: templates/esiidm/load_officers.html:42
+msgid "officer's email"
+msgstr "dirección de correo del responsable del sistema en la HEI"
+
+#: templates/esiidm/load_officers.html:53
+msgid "government issued identifier for the person"
+msgstr "identificador expedido por el gobierno para la persona"
+
+#: templates/esiidm/load_officers.html:58
+msgid "officer's HEI schacHomeOrganization"
+msgstr "schacHomeOrganization de la HEI del responsable del sistema en la HEI"
+
+#: templates/esiidm/load_officers.html:62
+msgid "officer's HEI PIC code"
+msgstr ""
+"Código PIC de la institución HEI del responsable del sistema en la HEI"
+
+#: templates/esiidm/load_officers.html:66
+msgid "officer's HEI EUC code"
+msgstr ""
+"Código EUC de la institución HEI del responsable del sistema en la HEI"
+
+#: templates/esiidm/load_officers.html:70
+msgid "officer's HEI ERC code"
+msgstr ""
+"Código ERC de la institución HEI del responsable del sistema en la HEI"
+
+#: templates/esiidm/load_officers.html:74
+msgid "officer's HEI OID code"
+msgstr ""
+"Código OID de la institución HEI del responsable del sistema en la HEI"
+
+#: templates/esiidm/load_officers.html:80
+msgid ""
+"\n"
+"        Only one of SHO, PIC, EUC, ERC or OID is required for linking\n"
+"        the officer to the HEI.\n"
+"        "
+msgstr ""
+"\n"
+"Sólo se requiere uno de SHO, PIC, EUC, ERC o OID para vincular al responsable con su Institución de Educación Superior."
+
+#: templates/esiidm/load_officers.html:85
+msgid ""
+"\n"
+"        If there is no HEI, the person is created in the system\n"
+"        with needed privileges but no associated HEI.\n"
+"        "
+msgstr ""
+"\n"
+"Si no existe la HEI, la persona es añadida al sistema con los permisos necesarios pero sin asociarse a una institución."
+
+#: templates/esiidm/not_consent.html:5
+msgid ""
+"\n"
+"<h3>Processing of personal information rejected</h3>\n"
+"Your declination of consent has been registered. Thank you.<br>\n"
+"Please note that you will not be able to use the system.<br>\n"
+msgstr ""
+"\n"
+"<h3>Se rechazó el procesado de información personal</h3>\n"
+"Su rechazo del consentimiento ha sido registrado. Gracias.<br />\n"
+"Por favor, tenga en cuenta que no podrá usar el sistema.<br />\n"
+
+#: templates/esiidm/unknown.html:15
+msgid "You have to"
+msgstr "Tiene que"
+
+#: templates/esiidm/unknown.html:17
+msgid "authenticate yourself"
+msgstr "autenticarse"
+
+#: templates/esiidm/unknown.html:19
+msgid "to use the system."
+msgstr "para usar el sistema."
+
+#: views.py:206
+msgid "Link for adding a new autentication"
+msgstr "Enlace para añadir una nueva autenticación"
+
+#: views.py:209
+#, python-brace-format
+msgid "Link sent to {0}"
+msgstr "Enlace enviado a {0}"
+
+#: views.py:210
+msgid "Your session has been closed."
+msgstr "Su sesión ha sido cerrada."
+
+#: views.py:213
+#, python-brace-format
+msgid "Send link to {0} failed."
+msgstr "Falló el envío del enlace a {0}."
+
+#: views.py:233
+msgid "Access not permitted."
+msgstr "Acceso denegado."
+
+#~ msgid "Field {0}"
+#~ msgstr "Campo {0}"
+
+#~ msgid "{0}"
+#~ msgstr "{0}"
+
+#~ msgid "SAML based authentication for Cl@ve"
+#~ msgstr "Autenticación basada en Cl@ve"
+
+#~ msgid "Disco test"
+#~ msgstr "Prueba de descubrimiento"
+
+#~ msgid "Logout test"
+#~ msgstr "Prueba de cierre de sesión"
+
+#~ msgid "Main test"
+#~ msgstr "Prueba principal"
+
+#~ msgid "Not found {0}"
+#~ msgstr "{0} no encontrado"
+
+#~ msgid "Status error {0}"
+#~ msgstr "Código de error {0}"
+
+#~ msgid "Service error {0}"
+#~ msgstr "Error de servicio {0}"
