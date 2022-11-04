@@ -12,7 +12,8 @@ app_name = 'esiidm'
 
 urlpatterns = [
     path('reinvite', reinvite, name='reinvite'),
-    path('cards/<int:hid>', cards, name='cards'),
+    path('cards/<int:hid>', cards, {'blank': False}, name='cards'),
+    path('cards/<int:hid>/blank', cards, {'blank': True}, name='cards'),
     re_path(r'accept/(?P<token>[^/]+)/(?P<response>[YN])', accept, name='accept'),
     path('accept/<token>', accept, name='accept'),
     path('authenticate', authenticate, name='authenticate'),

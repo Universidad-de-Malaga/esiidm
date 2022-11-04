@@ -223,7 +223,7 @@ def end(request):
     return redirect(reverse('esiidm:start'))
 
 @login_required
-def cards(request, hid):
+def cards(request, hid, blank=False):
     """
     Generates a PDF with all the cards for the HEI the officer manages.
     """
@@ -232,7 +232,7 @@ def cards(request, hid):
     if not hid in [h.id for h in request.user.HEIs]:
         return HttpResponseForbidden(_('Access not permitted.'))
     hei = HEI.objects.get(id=hid)
-    response = HttpResponse(hei.pdf_cards(),
+    response = HttpResponse(hei.pdf_cards(blank),
                             content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename={hei.sho}.cards.pdf'
     return response

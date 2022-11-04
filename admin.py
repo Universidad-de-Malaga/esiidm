@@ -417,27 +417,24 @@ class HEIAdmin(admin.ModelAdmin):
                     manager.save()
     
                 # We are good, check if the HEI exists
-                hei = HEI.objects.filter(Q(sho=line.get('sho', None))|
-                                         Q(euc=line.get('euc', None))|
-                                         Q(euc=line.get('euc', None))|
-                                         Q(euc=line.get('erc', None))|
-                                         Q(erc=line.get('oid', None))).first()
+                # As SHO is a required field and it MUST be unique, it's easy
+                hei = HEI.objects.filter(sho=line['sho'].strip()).first()
                 if hei is not None:
                     e = _('{0} already exists in line {1}').format(hei, total)
                     errors.append(e)
                     continue
                 hei = HEI()
-                hei.name = line['name']
-                hei.country = line['country']
-                hei.sho = line['sho']
+                hei.name = line['name'].strip()
+                hei.country = line['country'].strip()
+                hei.sho = line['sho'].strip()
                 hei.managedBy = manager
-                hei.pic = line.get('pic', '')
-                hei.euc = line.get('euc', '')
-                hei.erc = line.get('erc', '')
-                hei.oid = line.get('oid', '')
-                hei.url = line.get('url', '')
+                hei.pic = line.get('pic', '').strip()
+                hei.euc = line.get('euc', '').strip()
+                hei.erc = line.get('erc', '').strip()
+                hei.oid = line.get('oid', '').strip()
+                hei.url = line.get('url', '').strip()
                 hei.termstart = line.get('termstart',
-                                         get_setting('TERM_START',9))
+                                         get_setting('TERM_START',9)).strip()
                 try:
                     hei.save()
                     inserted += 1
@@ -452,25 +449,26 @@ class HEIAdmin(admin.ModelAdmin):
                     if not manager.is_staff:
                         manager.is_staff = True
                         manager.save()
-                except:
-                    e = _('{0} not saved. Existing data in line {1}.').format(hei, total)
+                except Exception as ex:
+                    es = _('Problem with {0} in line {1}: {2}')
+                    e = es.format(hei, total, ex)
                     errors.append(e)
                     continue
             # Data processed, how did it go...
             # At least one HEI inserted
             if not inserted == 0:
                 self.message_user(request,
-                                  ngettext('{0} HEI loaded'.format(inserted),
-                                           '{0} HEIs loaded'.format(inserted),
-                                           inserted),
+                                  ngettext('{0} HEI loaded',
+                                           '{0} HEIs loaded',
+                                           inserted).format(inserted),
                                   messages.SUCCESS)
             # Person objects created
             newpersons = len(new_persons)
             if not newpersons == 0:
                 self.message_user(request,
-                                  ngettext('{0} person created'.format(newpersons),
-                                           '{0} persons created'.format(newpersons),
-                                           newpersons),
+                                  ngettext('{0} person created',
+                                           '{0} persons created',
+                                           newpersons).format(newpersons),
                                   messages.SUCCESS)
             # We can send the invites to those that have just been added
             # to the system, asking for consent
@@ -593,12 +591,7 @@ class OfficerAdmin(admin.ModelAdmin):
         Optional fields:
             - identifier : government issued identifier for the person
             - sho : officer's HEI schacHomeOrganization
-            - pic : officer's HEI PIC code
-            - euc : officer's HEI EUC code
-            - erc : officer's HEI ERC code
-            - oid : officer's HEI OID code
-            Only one of SHO, PIC, EUC, ERC or OID is required for
-            linking the officer to the HEI. 
+            SHO is required for linking the officer to the HEI. 
             If there is no HEI, the person is created in the system
             with needed privileges but no associated HEI.
             Persons receive an invitation via email for activating the account.
@@ -642,11 +635,9 @@ class OfficerAdmin(admin.ModelAdmin):
                         errors.append(_('Field {0} missing on line {1}').format(field, total))
                 if errors_in_line: continue
                 # Superusers may indicate the HEI the officers are for
-                if user.is_superuser:
-                    hei = HEI.objects.filter(Q(pic=line.get('pic', None))|
-                                             Q(euc=line.get('euc', None))|
-                                             Q(euc=line.get('erc', None))|
-                                             Q(erc=line.get('oid', None))).first()
+                sho = line.get('sho', None)
+                if user.is_superuser and sho is not None:
+                    hei = HEI.objects.filter(sho=sho.strip())
                 # New or existing person?
                 person, new  = Person.objects.get_or_create(email=line['email'])
                 if new:
@@ -668,17 +659,17 @@ class OfficerAdmin(admin.ModelAdmin):
             # At least one officer inserted
             if not inserted == 0:
                 self.message_user(request,
-                                  ngettext('{0} officer loaded'.format(inserted),
-                                           '{0} officers loaded'.format(inserted),
-                                           inserted),
+                                  ngettext('{0} officer loaded',
+                                           '{0} officers loaded',
+                                           inserted).format(inserted),
                                   messages.SUCCESS)
             # Person objects created
             newpersons = len(new_persons)
             if not newpersons == 0:
                 self.message_user(request,
-                                  ngettext('{0} person created'.format(newpersons),
-                                           '{0} persons created'.format(newpersons),
-                                           newpersons),
+                                  ngettext('{0} person created',
+                                           '{0} persons created',
+                                           newpersons).format(newpersons),
                                   messages.SUCCESS)
             # We can send the invites to those that have just been added
             # to the system, asking for consent
@@ -913,23 +904,23 @@ class StudentCardAdmin(admin.ModelAdmin):
                 if not len(new_persons) == 0:
                     npersons = len(new_persons)
                     self.message_user(request,
-                                      ngettext('{0} person added'.format(npersons),
-                                               '{0} persons added'.format(npersons),
-                                               npersons),
+                                      ngettext('{0} person added',
+                                               '{0} persons added',
+                                               npersons).format(npersons),
                                       messages.SUCCESS)
                 if not len(new_cards) == 0 or not len(new_persons) == 0:
                     # Cards are added for existing and new persons
                     ncards = len(new_cards) + len(new_persons)
                     self.message_user(request,
-                                      ngettext('{0} card added'.format(ncards),
-                                               '{0} cards added'.format(ncards),
-                                               ncards),
+                                      ngettext('{0} card added',
+                                               '{0} cards added',
+                                               ncards).format(ncards),
                                       messages.SUCCESS)
                 if not deleted == 0:
                     self.message_user(request,
-                                      ngettext('{0} card deleted'.format(deleted),
-                                               '{0} cards deleted'.format(deleted),
-                                               deleted),
+                                      ngettext('{0} card deleted',
+                                               '{0} cards deleted',
+                                               deleted).format(deleted),
                                       messages.SUCCESS)
         # Render the form
         if len(errors) == 0:

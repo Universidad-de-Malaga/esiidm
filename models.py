@@ -359,7 +359,7 @@ class HEI(models.Model):
                 (12,_('December'))
              ]
 
-    name = models.CharField(max_length = 100,
+    name = models.CharField(max_length = 200,
                             db_index = True,
                             verbose_name = _('Institution name'))
     termstart = models.SmallIntegerField(
@@ -376,32 +376,30 @@ class HEI(models.Model):
     pic = models.CharField(max_length = 20,
                            db_index = True,
                            unique = True,
-                           blank = True,
                            null = True,
+                           blank = True,
                            verbose_name = _('PIC code'))
     euc = models.CharField(max_length = 50,
                            db_index = True,
                            unique = True,
-                           blank = True,
                            null = True,
+                           blank = True,
                            verbose_name = _('EUC code'))
     erc = models.CharField(max_length = 30,
                            db_index = True,
                            unique = True,
-                           blank = True,
                            null = True,
+                           blank = True,
                            verbose_name = _('Erasmus code'))
     oid = models.CharField(max_length = 10,
                            db_index = True,
                            unique = True,
-                           blank = True,
                            null = True,
+                           blank = True,
                            verbose_name = _('OID code'))
     sho = models.CharField(max_length = 100,
                            db_index = True,
                            unique = True,
-                           blank = True,
-                           null = True,
                            verbose_name = _('SCHAC Home Organization'),
                            help_text = _('Your Internet domain. For ESI'))
     # ESC router information
@@ -569,13 +567,20 @@ class HEI(models.Model):
         # If we reach here, better return None
         return None
 
-    def pdf_cards(self):
+    def pdf_cards(self, blank=False):
         if not os.path.exists('/tmp/qr-cards'):
             os.mkdir('/tmp/qr-cards')
 
+        # Set the card configured text color or black
+        tcol = get_setting('CARD_TXTCOL', {'r': 0, 'g': 0, 'b': 0})
+
+        # Do we have card backgrounds?
+        bgrnd = get_setting('CARD_IMG', None)
+
         # Information position from card top left corner
-        location = {'name': (5, 30), 'esi': (5, 40),
-                    'qr': (59, 20), 'esc': (5, 45)}
+        location = {'lname': (5, 30), 'fname': (5, 35), 
+                    'esi': (5, 40), 'esc': (5, 45),
+                    'qr': (59, 12)}
         start = {'x': 12, 'y': 10}
         gap = {'x': 10, 'y': 2}
         size = {'x': 85, 'y': 55}
@@ -586,6 +591,7 @@ class HEI(models.Model):
                      '/usr/share/fonts/dejavu/DejaVuSans.ttf',uni=True)
         pdf.add_font('DejaVu','B',
                      '/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf',uni=True)
+        pdf.set_text_color(r=tcol['r'], g=tcol['g'], b=tcol['b'])
 
         count = 0
         for card in self.studentcards.all():
@@ -599,33 +605,44 @@ class HEI(models.Model):
             x = start['x']+(size['x']*(hpos))+(gap['x']*hpos)
             y = start['y']+(size['y']*(vpos))+(gap['y']*vpos) if hpos == 0 else y
 
-            pdf.line(x, y, x+size['x'], y)
-            pdf.line(x+size['x'], y, x+size['x'], y+size['y'])
-            pdf.line(x+size['x'], y+size['y'], x, y+size['y'])
-            pdf.line(x, y+size['y'], x, y)
+            if blank or bgrnd is None:
+                pdf.line(x, y, x+size['x'], y)
+                pdf.line(x+size['x'], y, x+size['x'], y+size['y'])
+                pdf.line(x+size['x'], y+size['y'], x, y+size['y'])
+                pdf.line(x, y+size['y'], x, y)
+            else:
+                pdf.image(bgrnd, x=x, y=y, w=85, h=55)
 
-            pdf.set_xy(x + location['name'][0], y + location['name'][1])
-            fullname = f'{card.student.first_name} {card.student.last_name}'
+            pdf.set_xy(x + location['lname'][0], y + location['lname'][1])
             pdf.set_font('DejaVu', 'B', 11)
-            if len(fullname) > 24:
+            if len(card.student.last_name) > 24:
                 pdf.set_font('DejaVu', 'B', 10)
-            if len(fullname) > 27:
+            if len(card.student.last_name) > 27:
                 pdf.set_font('DejaVu', 'B', 9)
-            if len(fullname) > 30:
+            if len(card.student.last_name) > 30:
                 pdf.set_font('DejaVu', 'B', 8)
-            pdf.cell(0,10,fullname)
+            pdf.cell(0,10,card.student.last_name)
+            pdf.set_xy(x + location['fname'][0], y + location['fname'][1])
+            pdf.set_font('DejaVu', 'B', 9)
+            if len(card.student.first_name) > 24:
+                pdf.set_font('DejaVu', 'B', 8)
+            if len(card.student.first_name) > 27:
+                pdf.set_font('DejaVu', 'B', 7)
+            if len(card.student.first_name) > 30:
+                pdf.set_font('DejaVu', 'B', 6)
+            pdf.cell(0,10,card.student.first_name)
             pdf.set_xy(x + location['esi'][0], y + location['esi'][1])
             pdf.set_font('DejaVu','',9)
             pdf.cell(0,10,f'{card.esi}')
             pdf.set_xy(x + location['esc'][0], y + location['esc'][1])
-            pdf.set_font('DejaVu','',9)
+            pdf.set_font('DejaVu','',6)
             pdf.cell(0,10,f'{card.esc}')
             pdf.image(qr, x + location['qr'][0], y + location['qr'][1], 25, 25)
 
             count = count + 1
 
-        return pdf.output(name="" ,dest="S").encode('latin1')
-        return pdf
+        # PDF ready, send it
+        return pdf.output(name="", dest="S").encode('latin1')
 
 class Officer(models.Model):
     """A class for linking persons to the institutions they manage"""

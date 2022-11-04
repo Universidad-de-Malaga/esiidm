@@ -9,22 +9,22 @@ from django.utils.translation import ugettext_lazy as _
 class cardLoadForm(forms.Form):
     delimiter = forms.ChoiceField(label=_('Select delimiter your file uses'),
                                   initial=',',
-                                  choices=[(',','comma ","'),
-                                           (';','semi-colon ";"')])
+                                  choices=[(',',_('comma ","')),
+                                           (';',_('semi-colon ";"'))])
     data = forms.FileField(label=_('Data file:'))
 
 class heiLoadForm(forms.Form):
     delimiter = forms.ChoiceField(label=_('Select delimiter your file uses'),
                                   initial=',',
-                                  choices=[(',','comma ","'),
-                                           (';','semi-colon ";"')])
+                                  choices=[(',',_('comma ","')),
+                                           (';',_('semi-colon ";"'))])
     data = forms.FileField(label=_('Data file:'))
 
 class officerLoadForm(forms.Form):
     delimiter = forms.ChoiceField(label=_('Select delimiter your file uses'),
                                   initial=',',
-                                  choices=[(',','comma ","'),
-                                           (';','semi-colon ";"')])
+                                  choices=[(',',_('comma ","')),
+                                           (';',_('semi-colon ";"'))])
     data = forms.FileField(label=_('Data file:'))
 
 

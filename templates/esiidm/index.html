@@ -47,7 +47,8 @@ You can manage students for the following HEI:
 <ul>
   {% for hei in request.user.HEIs %}
   <li>{{ hei }}
-    <a href={% url 'esiidm:cards' hei.id %}>{% trans "get cards in PDF" %}</a>
+    <a href={% url 'esiidm:cards' hid=hei.id blank=False %}>{% trans "get cards in PDF" %}</a> or 
+    <a href={% url 'esiidm:cards' hid=hei.id blank=True %}>{% trans "for preprinted backgrounds" %}</a>
   </li>
   {% endfor %}
 </ul>
