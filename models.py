@@ -1,14 +1,7 @@
 # -*- coding: utf-8 -*-
 # vim:ts=4:expandtab:ai
-<<<<<<< HEAD
-<<<<<<< HEAD
-# $Id$
-=======
-=======
->>>>>>> 0f5e2f2 (is_ functions for persons)
 # $Id$
 
->>>>>>> f9b7c3d (First version of models)
 from django.db import models
 from django.conf import settings
 from django.core.mail import EmailMessage
