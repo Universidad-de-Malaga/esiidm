@@ -173,7 +173,7 @@ def accept(request, token, response=None):
             # The person does not consent to the requested operation
             request.session.flush()
             logout(request)
-            return render('esiidm/not_consent.html')
+            return render(request,'esiidm/not_consent.html')
     if phase == 'end':
         # The person reused a still valid token, nothing to do
         return redirect(reverse('esiidm:start'))

@@ -4,6 +4,11 @@
 --------------
 # What's this code for
 
+This code is a Dango application for managing basic student data that allows
+Higher Education Institutions to use in the MyAcademicId services that are part
+of the European Student Card Infrastructure, using EduGAIN identity federation.
+
+It can be used at any level, from a whole country down to a single institution.
 
 --------------
 # Installation
@@ -27,3 +32,16 @@
 --------------
 # Acknowledgements
 
+This software has been partially developed with support of the CEF EDSSI project
+Grant No. CEF-TC-2019-4-001.
+
+The first deployment as a system for Spanish non-University Erasmus+ students
+has been done under an collaboration agreement between SEPIE, RedIRIS/Red.es
+UMA.
+
+This people have invested time and ideas for producing it:
+
+- Victoriano Giralt (main coder, all bugs are mine).
+- Fernando Bautista (main tester, translator)
+- José Manuel Macias (verifier, translator)
+- Francisco Aragó (verifier)
