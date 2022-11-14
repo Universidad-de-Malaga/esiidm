@@ -1,0 +1,6 @@
+Django==3.2
+django-countries>=7.1
+djangosaml2idp==0.7.2
+fpdf==1.7
+qrcode>=6.1
+requests==2.27
