@@ -139,6 +139,15 @@ class Person(AbstractUser):
             result += [f'staff@{o.hei.sho}' for o in self.manages.all()]
         return result
 
+    @property
+    def entitlements(self):
+        # Return entitlements for the person
+        # Actually, just manager status for the Erasmus Dashboard
+        result = []
+        if self.is_officer:
+            result += ['urn:geant:erasmuswithoutpaper.eu:ewp:admin']
+        return result
+
     #def save(self, *args, **kwargs):
     #    """
     #    We do some checks before saving

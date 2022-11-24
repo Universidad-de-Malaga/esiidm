@@ -5,7 +5,7 @@
 # What's this code for
 
 This code is a Dango application for managing basic student data that allows
-Higher Education Institutions to use in the MyAcademicId services that are part
+Higher Education Institutions to use the MyAcademicId services that are part
 of the European Student Card Infrastructure, using EduGAIN identity federation.
 
 It can be used at any level, from a whole country down to a single institution.
@@ -37,7 +37,7 @@ Grant No. CEF-TC-2019-4-001.
 
 The first deployment as a system for Spanish non-University Erasmus+ students
 has been done under an collaboration agreement between SEPIE, RedIRIS/Red.es
-UMA.
+and UMA.
 
 This people have invested time and ideas for producing it:
 
