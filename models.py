@@ -17,6 +17,7 @@ AbstractUser._meta.get_field('email')._unique = True
 
 from urllib import parse
 from fpdf import FPDF
+from hashlib import sha256
 import uuid
 import requests
 import calendar
@@ -105,10 +106,26 @@ class Person(AbstractUser):
         return self.invitedOn is not None
 
     @property
+    def displayName(self):
+        return f'{self.last_name}, {self.first_name}'
+
+    @property
+    def mySHO(self):
+        return f'{self.cards.first().hei.sho}'
+
+    @property
+    def ePPN(self):
+        return f'{sha256(self.otp.encode("utf-8")).hexdigest()}@{self.cards.first().hei.sho}'
+
+    @property
+    def assurance(self):
+        return 'https://refeds.org/assurance/ID/eppn-unique-no-reassign'
+
+    @property
     def myESI(self):
         """
         Returns all ESI associated to a Person for generating the required
-        schacPersonalUniqueCode attrbute values in the SAML assertions.
+        schacPersonalUniqueCode attribute values in the SAML assertions.
         """
         return [c.myESI(myacid=True) for c in self.cards.all()]
 
