@@ -2,3 +2,6 @@
 *.pyc
 migrations/*
 __pycache__
+badges.py
+auth/clave-saml.py
+auth/sp.py
