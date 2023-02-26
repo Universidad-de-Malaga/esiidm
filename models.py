@@ -654,7 +654,10 @@ class HEI(models.Model):
             pdf.cell(0,10,card.student.first_name)
             pdf.set_xy(x + location['esi'][0], y + location['esi'][1])
             pdf.set_font('DejaVu','',9)
-            pdf.cell(0,10,f'{card.hei.sho}:{card.esi}')
+            # Ready for "new" ESI format
+            #pdf.cell(0,10,f'{card.hei.sho}:{card.esi}')
+            # "Old" ESC ESI format
+            pdf.cell(0,10,f'{card.hei.country}-{card.hei.pic}-{card.esi}')
             pdf.set_xy(x + location['esc'][0], y + location['esc'][1])
             pdf.set_font('DejaVu','',6)
             pdf.cell(0,10,f'{card.esc}')
