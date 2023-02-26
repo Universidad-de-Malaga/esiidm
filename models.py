@@ -590,11 +590,13 @@ class HEI(models.Model):
         if not os.path.exists('/tmp/qr-cards'):
             os.mkdir('/tmp/qr-cards')
 
-        # Set the card configured text color or black
-        tcol = get_setting('CARD_TXTCOL', {'r': 0, 'g': 0, 'b': 0})
-
         # Do we have card backgrounds?
         bgrnd = get_setting('CARD_IMG', None)
+
+        # Set the card configured text color or black
+        tcol = get_setting('CARD_TXTCOL', {'r': 0, 'g': 0, 'b': 0})
+        if blank or bgrnd is None:
+            tcol = {'r': 0, 'g': 0, 'b': 0}
 
         # Information position from card top left corner
         location = {'lname': (5, 30), 'fname': (5, 35), 
@@ -652,7 +654,7 @@ class HEI(models.Model):
             pdf.cell(0,10,card.student.first_name)
             pdf.set_xy(x + location['esi'][0], y + location['esi'][1])
             pdf.set_font('DejaVu','',9)
-            pdf.cell(0,10,f'{card.esi}')
+            pdf.cell(0,10,f'{card.hei.sho}:{card.esi}')
             pdf.set_xy(x + location['esc'][0], y + location['esc'][1])
             pdf.set_font('DejaVu','',6)
             pdf.cell(0,10,f'{card.esc}')
@@ -852,9 +854,9 @@ class StudentCard(models.Model):
         in ESC format if myacid is False (default)
             CC-PIC-identifier
         in MyAcademicId (URN) format if myacid is True
-            urn:schac:PersonalUniqueCode:scope:identifier
+            urn:schac:personalUniqueCode:scope:identifier
         """
-        code = f'urn:schac:PersonalUniqueCode:int:esi:{self.hei.sho}:{self.esi}'
+        code = f'urn:schac:personalUniqueCode:int:esi:{self.hei.sho}:{self.esi}'
         if myacid:
             return code
         return f'{self.hei.country.code}-{self.hei.pic}-{self.esi}'

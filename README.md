@@ -36,7 +36,7 @@ This software has been partially developed with support of the CEF EDSSI project
 Grant No. CEF-TC-2019-4-001.
 
 The first deployment as a system for Spanish non-University Erasmus+ students
-has been done under an collaboration agreement between SEPIE, RedIRIS/Red.es
+has been done under a collaboration agreement between SEPIE, RedIRIS/Red.es
 and UMA.
 
 This people have invested time and ideas for producing it:

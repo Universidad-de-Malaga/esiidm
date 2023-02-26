@@ -54,7 +54,7 @@ You can manage students for the following HEI:
 </ul>
 {% endif %}
 {% if request.user.is_student %}
-<emph>Test presentation</emph>
+<emph>{% trans "Test presentation" %}</emph>
 {% for c in request.user.cards.all %}
 <div class="card col-bg-6 col-sm-12">
   <div class="card-body">
@@ -67,7 +67,7 @@ You can manage students for the following HEI:
     <div class="card-text">
       <h3>{{ c.student.first_name }} {{ c.student.last_name }}</h3>
       <strong>{% trans "Student Number" %}:</strong> 
-      {{ c.hei.country }}-{{ c.hei.pic }}-{{ c.esi }}</br>
+      {{ c.hei.sho }}:{{ c.esi }}</br>
       <strong>{% trans "Card Number" %}:</strong>
       <a href="{{ c.myESCURL }}" class="btn btn-light">{{ c.esc }}</a>
     </div>
