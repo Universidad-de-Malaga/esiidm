@@ -13,12 +13,14 @@ from django.utils.translation import ngettext
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
+from django.http import HttpResponse
 from django.http import HttpResponseForbidden
 from django.conf import settings
 from django import forms
 
 from .utils import get_setting
 
+import codecs
 import csv
 import io
 
@@ -639,10 +641,10 @@ class OfficerAdmin(admin.ModelAdmin):
                 if user.is_superuser and sho is not None:
                     hei = HEI.objects.filter(sho=sho.strip())
                 # New or existing person?
-                person, new  = Person.objects.get_or_create(email=line['email'])
+                person, new  = Person.objects.get_or_create(email=line['email'].strip())
                 if new:
-                    person.first_name = line['first_name']
-                    person.last_name = line['last_name']
+                    person.first_name = line['first_name'].strip()
+                    person.last_name = line['last_name'].strip()
                     person.managedBy = request.user
                     new_persons.append((person, hei))
                 if new or not person.is_staff:
@@ -719,6 +721,7 @@ class StudentCardAdmin(admin.ModelAdmin):
     fieldsets = [(None, {'fields': [('student', 'hei'), ('esi', 'esc'),
                          'manager']})]
     readonly_fields = ['esc']
+    actions = ['export_cards']
 
     def has_module_permission(self, request, obj=None):
         if request.user.is_anonymous: return False
@@ -777,6 +780,31 @@ class StudentCardAdmin(admin.ModelAdmin):
         urls.insert(0, path('card_load/',
                     self.admin_site.admin_view(self.load_cards)))
         return urls
+
+    def export_cards(self, request, queryset):
+        """
+        Generates a CSV file with selected student cards.
+        """
+        response = HttpResponse(content_type='text/csv')
+        response.write(codecs.BOM_UTF8)
+        response['Content-Disposition'] = 'attachment; filename=cards.csv'
+
+        writer = csv.writer(response)
+        writer.writerow(
+            [field.verbose_name for field in StudentCard._meta.fields]
+        )
+
+        fields_names = [field.name for field in StudentCard._meta.fields]
+
+        for card in queryset.all():
+            writer.writerow(
+                [
+                    card.__getattribute__(field)
+                    for field in fields_names
+                ]
+            )
+        return response
+    export_cards.short_description = _('Export selected cards to CSV file.')
 
     def load_cards(self, request):
         """
@@ -847,24 +875,24 @@ class StudentCardAdmin(admin.ModelAdmin):
                             total += 1
                             errors.append(_('Bad operation {0} on line {1}').format(opcode, total))
                         if opcode == 'C':
-                            person, new = Person.objects.get_or_create(email=email)
+                            person, new = Person.objects.get_or_create(email=email.strip())
                             if new:
-                                person.first_name = first_name
-                                person.last_name = last_name
+                                person.first_name = first_name.strip()
+                                person.last_name = last_name.strip()
                                 person.managedBy = user
                                 person.save()
                                 new_persons.append(person.pk)
                             # There MUST be one card per person per hei and esi
                             card = StudentCard.objects.filter(student = person,
                                                               hei = hei,
-                                                              esi = esi).first()
+                                                              esi = esi.strip()).first()
                             newcard = False
                             if card is None:
                                 newcard = True
                                 card = StudentCard()
                                 card.student = person
                                 card.hei = hei
-                                card.esi = esi
+                                card.esi = esi.strip()
                             # Cards will be assigned to the officer loading them
                             # this eases the process for transfering control of
                             # existing cards by just reloading the transferred ones
@@ -877,7 +905,7 @@ class StudentCardAdmin(admin.ModelAdmin):
                         if opcode == 'D':
                             # There MUST be one card per person per hei and esi
                             card = StudentCard.objects.filter(hei = hei,
-                                                              esi = esi).first()
+                                                              esi = esi.strip()).first()
                             if card is None:
                                 errors.append(_('Card not found on line {0}').format(total))
                                 continue
