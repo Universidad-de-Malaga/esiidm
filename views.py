@@ -245,9 +245,14 @@ def statistics(request):
     if not request.user.is_officer and not request.user.is_superuser:
         return HttpResponseForbidden(_('Access not permitted'))
     heis = []
+    heicount = None
+    cardcount = None
+
     if request.user.is_superuser or request.user.groups.filter(name='Stats').exists():
+        heicount = HEI.objects.count()
+        cardcount = StudentCard.objects.count()
         heis = HEI.objects.all()
-    if request.user.is_officer:
+    elif request.user.is_officer:
         heis = request.user.HEIs
     return render(request, 'esiidm/statistics.html',
                   {'heis': heis})

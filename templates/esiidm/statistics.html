@@ -3,8 +3,14 @@
 
 {% block content %}
 <h3>
-{% trans "Usage statistics for the European Student Card and Identifier management system"
-%}</h3>
+{% trans "Usage statistics" %}
+</h3>
+  {% if heicount is not None %}
+  <p>
+  <strong>{% trans "Number of HEIs" %}:</strong> {{ heicount }}
+  <strong>{% trans "Number of cards" %}:</strong> {{ cardcount }}
+  </p>
+  {% endif %}
   <table class="table table-responsive table-striped table-condensed">
     <tr>
       <th>{% trans "HEI name" %}</th>
