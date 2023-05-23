@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<h3>
+{% trans "Usage statistics for the European Student Card and Identifier management system"
+%}</h3>
+  <table class="table table-responsive table-striped table-condensed">
+    <tr>
+      <th>{% trans "HEI name" %}</th>
+      <th>{% trans "students" %}</th>
+    </tr>
+    <tbody>
+    {% for h in heis %}
+    <tr>
+      <td style="text-align: left">{{ h.name }} </td>
+      <td style="text-align: center">{{ h.studentcards.count }}</td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan=2 style="text-align: center">
+        {% trans "Empty listing" %}
+      </td>
+      </tr>
+  {% endfor %}
+    </tbody>
+  </table>
+<p>
+{% endblock %}
+{% comment %}
+vim:ts=2:expandtab:ai
+$Id$
+{% endcomment %}

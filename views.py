@@ -236,3 +236,18 @@ def cards(request, hid, blank=False):
                             content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename={hei.sho}.cards.pdf'
     return response
+
+@login_required
+def statistics(request):
+    """
+    Generatest statistics for sharing with the EC
+    """
+    if not request.user.is_officer and not request.user.is_superuser:
+        return HttpResponseForbidden(_('Access not permitted'))
+    heis = []
+    if request.user.is_superuser or request.user.groups.filter(name='Stats').exists():
+        heis = HEI.objects.all()
+    if request.user.is_officer:
+        heis = request.user.HEIs
+    return render(request, 'esiidm/statistics.html',
+                  {'heis': heis})

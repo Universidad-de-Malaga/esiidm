@@ -459,12 +459,12 @@ class HEI(models.Model):
         get associated to other managing person if they have enrolments
         in other HEI 
         """
-        for student in self.studentcards.all():
-            card = student.person.cards.all().exclude(hei=self).first()
+        for studentcard in self.studentcards.all():
+            card = studentcard.student.cards.all().exclude(hei=self).first()
             if card is not None:
                 # Person is enrolled in other HEI at least
                 # Pass control to the manager of first HEI
-                person = student.person
+                person = student.student
                 person.managedBy = card.manager.person
                 person.save()
         # Officers may be enrolled as students in other HEIs
@@ -718,7 +718,7 @@ class Officer(models.Model):
         # The replacement will be the first officer from the same HEI
         replacements = Officer.objects.filter(hei = self.hei)
         replacements.exclude(person = self.person)
-        # Officer cannot be deleted, here is no replacement
+        # Officer cannot be deleted, there is no replacement
         if len(replacements) == 0: return False
         # Pass HEI to the first replacement in line
         self.hei.managedBy = replacement[0].person

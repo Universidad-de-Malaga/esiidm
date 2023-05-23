@@ -5,7 +5,7 @@
 from django.urls import path
 from django.urls import re_path
 
-from .views import accept, authenticate, start, reinvite, end, cards
+from .views import accept, authenticate, start, reinvite, end, cards, statistics
 from .auth import authn
 
 app_name = 'esiidm'
@@ -21,5 +21,6 @@ urlpatterns = [
     path('logout/', end, name='logout'),
     path('authn/<method>', authn, name='authn'),
     re_path('authn/(?P<method>[^/]+)/.*', authn, name='authn'),
+    path('stats/', statistics, name='logout'),
     path('', start, name='start'),
 ]
