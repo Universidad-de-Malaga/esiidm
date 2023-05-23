@@ -24,7 +24,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
 
-from .models import IdSource, Identifier, Person, HEI
+from .models import IdSource, Identifier, Person, HEI, StudentCard
 from .utils import get_setting
 
 def authenticate(request):
@@ -255,4 +255,4 @@ def statistics(request):
     elif request.user.is_officer:
         heis = request.user.HEIs
     return render(request, 'esiidm/statistics.html',
-                  {'heis': heis})
+                  {'heis': heis, 'heicount': heicount, 'cardcount': cardcount})
