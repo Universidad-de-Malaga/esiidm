@@ -112,6 +112,20 @@ def send_invites(modeladmin, request, queryset):
 send_invites.short_description = _('Send invite to selected persons')
 
 
+def register_cards(modeladmin, request, queryset):
+    """
+    Register selected student cards with the router again
+    """
+    for card in queryset:
+        result = card.save_in_ESCR()
+        if not result:
+            modeladmin.message_user(
+                            request,
+                            _('Could register card {0}').format(card),
+                            messages.WARNING)
+send_invites.short_description = _('Register selected cards again (slow)')
+        
+
 ###########################
 # Model admins
 ###########################

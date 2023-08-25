@@ -451,7 +451,7 @@ class HEI(models.Model):
 
 
     def __str__(self):
-        return '{0.name} - {0.sho} - {0.pic}'.format(self)
+        return f'{self.name} - {self.sho} - {self.pic}'
 
     def delete(self, *args, **kwargs):
         """
@@ -709,7 +709,7 @@ class Officer(models.Model):
         ]
 
     def __str__(self):
-        return '{0.person} => {0.hei}'.format(self)
+        return f'{self.person} => {self.hei}'
 
     def delete(self, *args, **kwargs):
         """
@@ -794,7 +794,7 @@ class StudentCard(models.Model):
         ]
 
     def __str__(self):
-        return '{0.student} - {0.esc} - {1}'.format(self, self.myESI())
+        return f'{self.student} - {self.esc} - {self.myESI()}'
 
     def save(self, *args, **kwargs):
         """
