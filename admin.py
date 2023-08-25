@@ -858,6 +858,7 @@ class StudentCardAdmin(admin.ModelAdmin):
             with transaction.atomic():
                 try:
                     for line in lines:
+                        errors_in_line = False
                         esi = line.get('esi', None)
                         email = line.get('email', None)
                         first_name = line.get('first_name', None)
@@ -867,13 +868,16 @@ class StudentCardAdmin(admin.ModelAdmin):
                              email in (None, '') or
                              first_name in (None, '') or
                              last_name in (None, '')):
+                            errors_in_line = True
                             total += 1
                             errors.append(_('Missing data on line {0}').format(total))
                         opcode = line.get('operation','C')
                         if opcode is None or opcode.strip() == '': opcode = 'C'
                         if opcode not in ['C', 'D']:
+                            error = True
                             total += 1
                             errors.append(_('Bad operation {0} on line {1}').format(opcode, total))
+                        if errors_in_line: continue
                         if opcode == 'C':
                             person, new = Person.objects.get_or_create(email=email.strip())
                             if new:

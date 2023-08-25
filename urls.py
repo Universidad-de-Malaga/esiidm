@@ -21,6 +21,6 @@ urlpatterns = [
     path('logout/', end, name='logout'),
     path('authn/<method>', authn, name='authn'),
     re_path('authn/(?P<method>[^/]+)/.*', authn, name='authn'),
-    path('stats/', statistics, name='logout'),
+    path('stats/', statistics, name='stats'),
     path('', start, name='start'),
 ]

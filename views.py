@@ -242,8 +242,6 @@ def statistics(request):
     """
     Generatest statistics for sharing with the EC
     """
-    if not request.user.is_officer and not request.user.is_superuser:
-        return HttpResponseForbidden(_('Access not permitted'))
     heis = []
     heicount = None
     cardcount = None
@@ -254,5 +252,7 @@ def statistics(request):
         heis = HEI.objects.all()
     elif request.user.is_officer:
         heis = request.user.HEIs
+    else:
+        return HttpResponseForbidden(_('Access not permitted'))
     return render(request, 'esiidm/statistics.html',
                   {'heis': heis, 'heicount': heicount, 'cardcount': cardcount})
