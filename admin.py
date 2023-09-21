@@ -123,7 +123,7 @@ def register_cards(modeladmin, request, queryset):
                             request,
                             _('Could register card {0}').format(card),
                             messages.WARNING)
-send_invites.short_description = _('Register selected cards again (slow)')
+register_cards.short_description = _('Register selected cards again (slow)')
         
 
 ###########################
@@ -735,7 +735,7 @@ class StudentCardAdmin(admin.ModelAdmin):
     fieldsets = [(None, {'fields': [('student', 'hei'), ('esi', 'esc'),
                          'manager']})]
     readonly_fields = ['esc']
-    actions = ['export_cards']
+    actions = ['export_cards', register_cards]
 
     def has_module_permission(self, request, obj=None):
         if request.user.is_anonymous: return False
