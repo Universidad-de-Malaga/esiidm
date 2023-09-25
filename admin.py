@@ -745,7 +745,10 @@ class StudentCardAdmin(admin.ModelAdmin):
         return False
 
     def has_add_permission(self, request):
-        # It doesn't make sense adding indiviual cards, better load them
+        if request.user.is_anonymous: return False
+        if request.user.is_superuser or request.user.is_officer: return True
+        if super(StudentCardAdmin, self).has_add_permission(request, obj):
+            return True
         return False
 
     def has_view_permission(self, request, obj=None):
