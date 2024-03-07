@@ -1313,6 +1313,19 @@ class BatchLineAdmin(admin.TabularInline):
     hidden_fields = ['id', 'file']
     extra = 1
 
+    # Lines can be managed as long as the batch can be
+    def has_view_permission(self, request, obj=None):
+        return True
+
+    def has_add_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
 
 @admin.register(CardBatch)
 class CardBatchAdmin(admin.ModelAdmin):
@@ -1339,7 +1352,7 @@ class CardBatchAdmin(admin.ModelAdmin):
             return False
         if request.user.is_superuser or request.user.is_officer:
             return True
-        if super(PersonAdmin, self).has_module_permission(request, obj):
+        if super(CardBatchAdmin, self).has_module_permission(request, obj):
             return True
         return False
 

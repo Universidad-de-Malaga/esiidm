@@ -1133,6 +1133,7 @@ class CardBatch(models.Model):
         Person,
         on_delete=models.PROTECT,
         db_index=True,
+        editable=False,
         related_name='batches',
         related_query_name='batch',
         verbose_name=_('Created by'),
