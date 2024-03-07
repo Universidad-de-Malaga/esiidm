@@ -1118,7 +1118,7 @@ class StudentCard(models.Model):
 # Auxiliary models
 
 
-class CSVFile(models.Model):
+class CardBatch(models.Model):
     """A class for simplifying loading a small number of students"""
 
     hei = models.ForeignKey(
@@ -1130,7 +1130,7 @@ class CSVFile(models.Model):
         verbose_name=_('HEI'),
     )
     createdBy = models.ForeignKey(
-        Officer,
+        Person,
         on_delete=models.PROTECT,
         db_index=True,
         related_name='batches',
@@ -1164,10 +1164,10 @@ class CSVFile(models.Model):
         return f'{self.hei} - {self.createdOn} - {self.description}'
 
 
-class CSVLine(models.Model):
+class BatchLine(models.Model):
     """A fake CSV File line"""
 
-    file = models.ForeignKey(CSVFile, db_index=True, on_delete=models.CASCADE)
+    file = models.ForeignKey(CardBatch, db_index=True, on_delete=models.CASCADE)
     esi = models.CharField(max_length=50, db_index=True)
     first_name = models.CharField(max_length=50, db_index=True)
     last_name = models.CharField(max_length=80, db_index=True)

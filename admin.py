@@ -25,116 +25,17 @@ import csv
 import io
 
 # Register your models here.
-from .models import HEI, Person, Officer, StudentCard, IdSource, Identifier
+from .models import (
+    HEI,
+    Person,
+    Officer,
+    StudentCard,
+    IdSource,
+    Identifier,
+    CardBatch,
+    BatchLine,
+)
 from .forms import cardLoadForm, heiLoadForm, officerLoadForm
-
-###########################
-# Filters
-###########################
-class HasAcceptedListFilter(admin.SimpleListFilter):
-    title = _('Has accepted')
-    parameter_name = 'hasaccepted'
-
-    def lookups(self, request, mdl):
-        return (('True', _('Yes')), ('False', _('No')))
-
-    def queryset(self, request, queryset):
-        if self.value():
-            # We need to reverse the meaning as we are looking for nulls
-            # so hasaccepted is true when acceptedOn is NOT null
-            what = self.value() == 'False'
-            return queryset.filter(acceptedOn__isnull=what)
-        else:
-            return queryset
-
-
-class IsInvitedListFilter(admin.SimpleListFilter):
-    title = _('Is Invited')
-    parameter_name = 'isinvited'
-
-    def lookups(self, request, mdl):
-        return (('True', _('Yes')), ('False', _('No')))
-
-    def queryset(self, request, queryset):
-        if self.value():
-            # We need to reverse the meaning as we are looking for nulls
-            # so isinvited is true when invitedOn is NOT null
-            what = self.value() == 'False'
-            return queryset.filter(invitedOn__isnull=what)
-        else:
-            return queryset
-
-
-class CountryListFilter(admin.SimpleListFilter):
-    title = 'Country'
-    parameter_name = 'country'
-
-    def lookups(self, request, mdl):
-        # We filter countries for objects managed by the current user
-        objects = mdl.model.objects.filter(managedBy=request.user)
-        countries = set([t.country for t in objects])
-        return [(country, country) for country in countries]
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(country=self.value())
-        else:
-            return queryset
-
-
-###########################
-# Actions
-###########################
-def send_invites(modeladmin, request, queryset):
-    """
-    Resend invitations to the selected persons
-    """
-    for person in queryset:
-        if person.is_superuser:
-            template = 'esiidm/super_invite.txt'
-            hei = None
-        elif person.is_officer:
-            template = 'esiidm/officer_invite.txt'
-            # Persons consent when they are inserted for the first HEI
-            hei = person.myHEI
-        else:
-            # Person is a student
-            template = 'esiidm/student_invite.txt'
-            # Persons consent when they are inserted for the first HEI
-            hei = person.myHEI
-        host = get_setting(
-            'MAIL_ORIGIN_DOMAIN', request.get_host().split(':')[0]
-        )
-        result = person.invite(
-            person.managedBy, hei=hei, host=host, template=template
-        )
-        if not result:
-            modeladmin.message_user(
-                request,
-                _('Could not send message to {0}').format(person.email),
-                messages.WARNING,
-            )
-
-
-send_invites.short_description = _('Send invite to selected persons')
-
-
-def register_cards(modeladmin, request, queryset):
-    """
-    Register selected student cards with the router again
-    """
-    for card in queryset:
-        result = card.save_in_ESCR()
-        if not result:
-            modeladmin.message_user(
-                request,
-                _('Could register card {0}').format(card),
-                messages.WARNING,
-            )
-
-
-register_cards.short_description = _('Register selected cards again (slow)')
-
 
 ###########################
 # Auxiliary functions
@@ -245,6 +146,164 @@ def process_lines(lines, hei, officer, host, file=True):
             errors.append(_('Message to {0} not sent').format(person.email))
     # End line processing
     return total, cards, deleted, len(new_persons), len(new_cards), errors
+
+
+###########################
+# Filters
+###########################
+class HasAcceptedListFilter(admin.SimpleListFilter):
+    title = _('Has accepted')
+    parameter_name = 'hasaccepted'
+
+    def lookups(self, request, mdl):
+        return (('True', _('Yes')), ('False', _('No')))
+
+    def queryset(self, request, queryset):
+        if self.value():
+            # We need to reverse the meaning as we are looking for nulls
+            # so hasaccepted is true when acceptedOn is NOT null
+            what = self.value() == 'False'
+            return queryset.filter(acceptedOn__isnull=what)
+        else:
+            return queryset
+
+
+class IsInvitedListFilter(admin.SimpleListFilter):
+    title = _('Is Invited')
+    parameter_name = 'isinvited'
+
+    def lookups(self, request, mdl):
+        return (('True', _('Yes')), ('False', _('No')))
+
+    def queryset(self, request, queryset):
+        if self.value():
+            # We need to reverse the meaning as we are looking for nulls
+            # so isinvited is true when invitedOn is NOT null
+            what = self.value() == 'False'
+            return queryset.filter(invitedOn__isnull=what)
+        else:
+            return queryset
+
+
+class CountryListFilter(admin.SimpleListFilter):
+    title = 'Country'
+    parameter_name = 'country'
+
+    def lookups(self, request, mdl):
+        # We filter countries for objects managed by the current user
+        objects = mdl.model.objects.filter(managedBy=request.user)
+        countries = set([t.country for t in objects])
+        return [(country, country) for country in countries]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(country=self.value())
+        else:
+            return queryset
+
+
+###########################
+# Actions
+###########################
+def send_invites(modeladmin, request, queryset):
+    """
+    Resend invitations to the selected persons
+    """
+    for person in queryset:
+        if person.is_superuser:
+            template = 'esiidm/super_invite.txt'
+            hei = None
+        elif person.is_officer:
+            template = 'esiidm/officer_invite.txt'
+            # Persons consent when they are inserted for the first HEI
+            hei = person.myHEI
+        else:
+            # Person is a student
+            template = 'esiidm/student_invite.txt'
+            # Persons consent when they are inserted for the first HEI
+            hei = person.myHEI
+        host = get_setting(
+            'MAIL_ORIGIN_DOMAIN', request.get_host().split(':')[0]
+        )
+        result = person.invite(
+            person.managedBy, hei=hei, host=host, template=template
+        )
+        if not result:
+            modeladmin.message_user(
+                request,
+                _('Could not send message to {0}').format(person.email),
+                messages.WARNING,
+            )
+
+
+send_invites.short_description = _('Send invite to selected persons')
+
+
+def register_cards(modeladmin, request, queryset):
+    """
+    Register selected student cards with the router again
+    """
+    for card in queryset:
+        result = card.save_in_ESCR()
+        if not result:
+            modeladmin.message_user(
+                request,
+                _('Could register card {0}').format(card),
+                messages.WARNING,
+            )
+
+
+register_cards.short_description = _('Register selected cards again (slow)')
+
+
+def process_batches(modeladmin, request, queryset):
+    """
+    Load batches of lines for creating students (with their cards)
+    """
+    # We need the request host as lifesaver for sending mails
+    host = request.get_host().split(':')[0]
+    for batch in queryset:
+        # We have to find the officer that correspons to the current user in
+        # the batch HEI
+        officer = Officer.objects.get(person=request.user, hei=batch.hei)
+        lines = [l.__dict__ for l in batch]
+        total, cards, deleted, new_persons, new_cards, errors = process_lines(
+            lines, batch.hei, officer, host, False
+        )
+        # Reporting...
+        if not total == 0:
+            if not new_persons == 0:
+                modeladmin.message_user(
+                    request,
+                    ngettext(
+                        '{0} person added', '{0} persons added', new_persons
+                    ).format(new_persons),
+                    messages.SUCCESS,
+                )
+            if not new_cards == 0 or not new_persons == 0:
+                # Cards are added for existing and new persons
+                ncards = new_cards + new_persons
+                modeladmin.message_user(
+                    request,
+                    ngettext(
+                        '{0} card added', '{0} cards added', ncards
+                    ).format(ncards),
+                    messages.SUCCESS,
+                )
+            if not deleted == 0:
+                modeladmin.message_user(
+                    request,
+                    ngettext(
+                        '{0} card deleted', '{0} cards deleted', deleted
+                    ).format(deleted),
+                    messages.SUCCESS,
+                )
+        if not len(errors) == 0:
+            for e in errors:
+                modeladmin.message_user(request, e, messages.ERROR)
+
+
+process_batches.short_description = _('Load selected batches')
 
 
 ###########################
@@ -1160,16 +1219,23 @@ class StudentCardAdmin(admin.ModelAdmin):
             )
             # We need the request host as lifesaver for sending mails
             host = request.get_host().split(':')[0]
-            total, cards, deleted, new_persons, new_cards, errors = process_lines(
-                lines, hei, officer, host
-            )
+            (
+                total,
+                cards,
+                deleted,
+                new_persons,
+                new_cards,
+                errors,
+            ) = process_lines(lines, hei, officer, host)
             # Reporting...
             if not total == 0:
                 if not new_persons == 0:
                     self.message_user(
                         request,
                         ngettext(
-                            '{0} person added', '{0} persons added', new_persons
+                            '{0} person added',
+                            '{0} persons added',
+                            new_persons,
                         ).format(new_persons),
                         messages.SUCCESS,
                     )
@@ -1203,7 +1269,7 @@ class StudentCardAdmin(admin.ModelAdmin):
                 )
         else:
             for e in errors:
-                message_user(request, e, messages.ERROR)
+                self.message_user(request, e, messages.ERROR)
         context = dict(self.admin_site.each_context(request), form=form)
         return TemplateResponse(request, 'esiidm/load_cards.html', context)
 
@@ -1240,3 +1306,80 @@ class IdSourceAdmin(admin.ModelAdmin):
             },
         )
     ]
+
+
+class BatchLineAdmin(admin.TabularInline):
+    model = BatchLine
+    hidden_fields = ['id', 'file']
+    extra = 1
+
+
+@admin.register(CardBatch)
+class CardBatchAdmin(admin.ModelAdmin):
+    list_filter = ['createdOn']
+    search_fields = ['description', 'hei']
+    list_display_links = ['id', 'createdOn', 'last_name']
+    list_display = [
+        'id',
+        'description',
+        'processed',
+        'hei',
+        'createdOn',
+        'loadedOn',
+    ]
+    list_editable = ['description']
+    inlines = [BatchLineAdmin]
+    actions = [process_batches]
+
+    def has_module_permission(self, request, obj=None):
+        if request.user.is_anonymous:
+            return False
+        if request.user.is_superuser or request.user.is_officer:
+            return True
+        if super(PersonAdmin, self).has_module_permission(request, obj):
+            return True
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        if obj is None:
+            return True
+        # Not even superusers should view data they do not manage
+        if obj is not None and request.user.id == obj.createdBy.id:
+            return True
+        # Persons with admin privileges can view their data
+        if obj is not None and request.user.id == obj.id:
+            return True
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        if obj is None:
+            return True
+        # Not even superusers should alter data they do not manage
+        if obj is not None and request.user.id == obj.createdBy.id:
+            return True
+        return False
+
+    def get_changeform_initial_data(self, request):
+        return {'createdBy': request.user}
+
+    def get_listdisplay(self, request, obj=None):
+        # Is the user a superuser or an officer for several HEIs
+        if request.user.is_superuser or (
+            request.user.is_officer and request.user.HEIs.count() > 1
+        ):
+            if 'myHEI' not in self.list_display:
+                self.list_display.append('myHEI')
+        return self.list_display
+
+    def get_queryset(self, request):
+        return CardBatch.objects.filter(createdBy=request.user)
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.createdBy = request.user
+        super().save_model(request, obj, form, change)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'createdBy':
+            kwargs['queryset'] = Person.objects.filter(is_staff=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
