@@ -266,7 +266,7 @@ def process_batches(modeladmin, request, queryset):
         # We have to find the officer that correspons to the current user in
         # the batch HEI
         officer = Officer.objects.get(person=request.user, hei=batch.hei)
-        lines = [l.__dict__ for l in batch]
+        lines = [l.__dict__ for l in batch.batchline_set.all()]
         total, cards, deleted, new_persons, new_cards, errors = process_lines(
             lines, batch.hei, officer, host, False
         )
@@ -1376,6 +1376,14 @@ class CardBatchAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
+        if obj is None:
+            return True
+        # Not even superusers should alter data they do not manage
+        if obj is not None and request.user.id == obj.createdBy.id:
+            return True
+        return False
+
+    def has_delete_permission(self, request, obj=None):
         if obj is None:
             return True
         # Not even superusers should alter data they do not manage
