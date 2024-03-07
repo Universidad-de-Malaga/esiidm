@@ -1317,14 +1317,17 @@ class BatchLineAdmin(admin.TabularInline):
 @admin.register(CardBatch)
 class CardBatchAdmin(admin.ModelAdmin):
     list_filter = ['createdOn']
-    search_fields = ['description', 'hei']
-    list_display_links = ['id', 'createdOn', 'last_name']
+    search_fields = ['description', 'hei__name']
+    list_display_links = [
+        'id',
+        'createdOn',
+    ]
     list_display = [
         'id',
+        'createdOn',
+        'hei',
         'description',
         'processed',
-        'hei',
-        'createdOn',
         'loadedOn',
     ]
     list_editable = ['description']
@@ -1348,6 +1351,14 @@ class CardBatchAdmin(admin.ModelAdmin):
             return True
         # Persons with admin privileges can view their data
         if obj is not None and request.user.id == obj.id:
+            return True
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        if obj is None:
+            return True
+        # Not even superusers should alter data they do not manage
+        if obj is not None and request.user.id == obj.createdBy.id:
             return True
         return False
 
