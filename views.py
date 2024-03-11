@@ -24,7 +24,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
 
-from .models import IdSource, Identifier, Person, HEI, StudentCard
+from .models import IdSource, Identifier, Person, HEI, StudentCard, AuthLog
 from .utils import get_setting
 
 def authenticate(request):
@@ -87,8 +87,12 @@ def authenticate(request):
                 return HttpResponseForbidden(_('Access not permitted'))
             person = identifier.person
         # Log the person in
+        go_to = request.session.get('next', reverse('esiidm:start'))
+        how = request.session.get('authn_source', None)
         login(request, person)
-        return redirect(request.session.get('next', reverse('esiidm:start')))
+        # Log the authentication
+        AuthLog(hei=person.myHEI, how=how, what=go_to).save()
+        return redirect(go_to)
     # How did we get here? Someone is messing with the session ...
     if getattr(settings, 'DEBUG', False): print('auth. final')
     request.session.flush()

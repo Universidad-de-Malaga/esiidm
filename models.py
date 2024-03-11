@@ -1193,5 +1193,48 @@ class BatchLine(models.Model):
         ]
 
 
+class AuthLog(models.Model):
+    when = models.DateTimeField(
+        verbose_name=_('When'),
+        auto_now_add=True,
+        db_index=True,
+        editable=False,
+    )
+    hei = models.ForeignKey(
+        HEI,
+        on_delete=models.SET_NULL,
+        null=True,
+        db_index=True,
+        editable=False,
+        related_name='autentications',
+        related_query_name='autentication',
+        verbose_name=_('HEI'),
+    )
+    how = models.ForeignKey(
+        IdSource,
+        on_delete=models.SET_NULL,
+        null=True,
+        db_index=True,
+        editable=False,
+        related_name='autentications',
+        related_query_name='autentication',
+        verbose_name=_('How'),
+    )
+    what = models.CharField(
+        verbose_name=_('When'),
+        max_lenght=50,
+        db_index=True,
+        editable=False,
+    )
+
+    class Meta:
+        verbose_name = _('Authentication log')
+        verbose_name_plural = _('Authentication logs')
+        ordering = ['when']
+
+    def __str__(self):
+        return f'{self.when} - {self.hei} - {self.how} - {self.what}'
+
+
 # We import the signals so they are bound to the objects
 from . import signals
