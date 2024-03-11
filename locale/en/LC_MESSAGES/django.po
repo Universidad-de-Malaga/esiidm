@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-05-27 10:54+0200\n"
+"POT-Creation-Date: 2023-03-06 19:29+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,55 +18,55 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: esiidm/admin.py:33
+#: esiidm/admin.py:35
 msgid "Has accepted"
 msgstr ""
 
-#: esiidm/admin.py:37 esiidm/admin.py:53
+#: esiidm/admin.py:39 esiidm/admin.py:55
 #: esiidm/templates/esiidm/consent.html:38
 msgid "Yes"
 msgstr ""
 
-#: esiidm/admin.py:37 esiidm/admin.py:53
+#: esiidm/admin.py:39 esiidm/admin.py:55
 #: esiidm/templates/esiidm/consent.html:39
 msgid "No"
 msgstr ""
 
-#: esiidm/admin.py:49
+#: esiidm/admin.py:51
 msgid "Is Invited"
 msgstr ""
 
-#: esiidm/admin.py:108
+#: esiidm/admin.py:110
 #, python-brace-format
 msgid "Could not send message to {0}"
 msgstr ""
 
-#: esiidm/admin.py:110
+#: esiidm/admin.py:112
 msgid "Send invite to selected persons"
 msgstr ""
 
-#: esiidm/admin.py:234 esiidm/admin.py:332
+#: esiidm/admin.py:236 esiidm/admin.py:334
 msgid "Access control"
 msgstr ""
 
-#: esiidm/admin.py:239
+#: esiidm/admin.py:241
 msgid "Permissions"
 msgstr ""
 
-#: esiidm/admin.py:242
+#: esiidm/admin.py:244
 msgid "Administrivia"
 msgstr ""
 
-#: esiidm/admin.py:327
+#: esiidm/admin.py:329
 msgid "Erasmus"
 msgstr ""
 
-#: esiidm/admin.py:329
+#: esiidm/admin.py:331
 msgid "European Student Card"
 msgstr ""
 
-#: esiidm/admin.py:365 esiidm/admin.py:617 esiidm/admin.py:801
-#: esiidm/admin.py:818 esiidm/auth/__init__.py:14 esiidm/auth/clave.py:27
+#: esiidm/admin.py:367 esiidm/admin.py:619 esiidm/admin.py:829
+#: esiidm/admin.py:846 esiidm/auth/__init__.py:14 esiidm/auth/clave.py:27
 #: esiidm/auth/environment.py:28 esiidm/auth/mail.py:94 esiidm/auth/mail.py:117
 #: esiidm/auth/mail.py:123 esiidm/auth/mail.py:128 esiidm/auth/mail.py:134
 #: esiidm/auth/mail.py:149 esiidm/auth/mail.py:152 esiidm/auth/mail.py:164
@@ -76,92 +76,96 @@ msgstr ""
 msgid "Access not permitted"
 msgstr ""
 
-#: esiidm/admin.py:388 esiidm/admin.py:635
+#: esiidm/admin.py:390 esiidm/admin.py:637
 #, python-brace-format
 msgid "Field {0} missing on line {1}"
 msgstr ""
 
-#: esiidm/admin.py:406
+#: esiidm/admin.py:408
 #, python-brace-format
 msgid ""
 "Person {0} in line {1} does not exist. Not enough information to add a "
 "person."
 msgstr ""
 
-#: esiidm/admin.py:423
+#: esiidm/admin.py:425
 #, python-brace-format
 msgid "{0} already exists in line {1}"
 msgstr ""
 
-#: esiidm/admin.py:453
+#: esiidm/admin.py:455
 #, python-brace-format
 msgid "Problem with {0} in line {1}: {2}"
 msgstr ""
 
-#: esiidm/admin.py:461
+#: esiidm/admin.py:463
 #, python-brace-format
 msgid "{0} HEI loaded"
 msgid_plural "{0} HEIs loaded"
 msgstr[0] ""
 msgstr[1] ""
 
-#: esiidm/admin.py:469 esiidm/admin.py:670
+#: esiidm/admin.py:471 esiidm/admin.py:672
 #, python-brace-format
 msgid "{0} person created"
 msgid_plural "{0} persons created"
 msgstr[0] ""
 msgstr[1] ""
 
-#: esiidm/admin.py:481 esiidm/admin.py:682 esiidm/admin.py:902
+#: esiidm/admin.py:483 esiidm/admin.py:684 esiidm/admin.py:930
 #, python-brace-format
 msgid "Message to {0} not sent"
 msgstr ""
 
-#: esiidm/admin.py:662
+#: esiidm/admin.py:664
 #, python-brace-format
 msgid "{0} officer loaded"
 msgid_plural "{0} officers loaded"
 msgstr[0] ""
 msgstr[1] ""
 
-#: esiidm/admin.py:695 esiidm/admin.py:932
+#: esiidm/admin.py:697 esiidm/admin.py:960
 msgid "Select HEI"
 msgstr ""
 
-#: esiidm/admin.py:843
+#: esiidm/admin.py:807
+msgid "Export selected cards to CSV file."
+msgstr ""
+
+#: esiidm/admin.py:871
 #, python-brace-format
 msgid "Missing data on line {0}"
 msgstr ""
 
-#: esiidm/admin.py:848
+#: esiidm/admin.py:876
 #, python-brace-format
 msgid "Bad operation {0} on line {1}"
 msgstr ""
 
-#: esiidm/admin.py:882
+#: esiidm/admin.py:910
 #, python-brace-format
 msgid "Card not found on line {0}"
 msgstr ""
 
-#: esiidm/admin.py:888
+#: esiidm/admin.py:916
 msgid "Data has errors"
 msgstr ""
 
-#: esiidm/admin.py:907
+#: esiidm/admin.py:935
 #, python-brace-format
 msgid "{0} person added"
 msgid_plural "{0} persons added"
 msgstr[0] ""
 msgstr[1] ""
 
-#: esiidm/admin.py:915
+#: esiidm/admin.py:943
 #, python-brace-format
 msgid "{0} card added"
 msgid_plural "{0} cards added"
 msgstr[0] ""
 msgstr[1] ""
 
-#: esiidm/admin.py:921
+#: esiidm/admin.py:949
 #, python-brace-format
 msgid "{0} card deleted"
 msgid_plural "{0} cards deleted"
@@ -233,266 +237,266 @@ msgstr ""
 msgid "Data file:"
 msgstr ""
 
-#: esiidm/models.py:38
+#: esiidm/models.py:39
 msgid "Government issued identifier"
 msgstr ""
 
-#: esiidm/models.py:43
+#: esiidm/models.py:44
 msgid "Invitation code"
 msgstr ""
 
-#: esiidm/models.py:52 esiidm/models.py:411 esiidm/models.py:659
+#: esiidm/models.py:53 esiidm/models.py:437 esiidm/models.py:690
 msgid "Responsible person"
 msgstr ""
 
-#: esiidm/models.py:53 esiidm/models.py:269 esiidm/models.py:314
-#: esiidm/models.py:412 esiidm/models.py:660 esiidm/models.py:741
+#: esiidm/models.py:54 esiidm/models.py:295 esiidm/models.py:340
+#: esiidm/models.py:438 esiidm/models.py:691 esiidm/models.py:772
 msgid "Created on"
 msgstr ""
 
-#: esiidm/models.py:57 esiidm/models.py:273 esiidm/models.py:318
-#: esiidm/models.py:416 esiidm/models.py:664 esiidm/models.py:745
+#: esiidm/models.py:58 esiidm/models.py:299 esiidm/models.py:344
+#: esiidm/models.py:442 esiidm/models.py:695 esiidm/models.py:776
 msgid "Modified on"
 msgstr ""
 
-#: esiidm/models.py:61
+#: esiidm/models.py:62
 msgid "Invited on"
 msgstr ""
 
-#: esiidm/models.py:65
+#: esiidm/models.py:66
 msgid "Accepted on"
 msgstr ""
 
-#: esiidm/models.py:75 esiidm/models.py:307
+#: esiidm/models.py:76 esiidm/models.py:333
 msgid "Person"
 msgstr ""
 
-#: esiidm/models.py:76
+#: esiidm/models.py:77
 msgid "Persons"
 msgstr ""
 
-#: esiidm/models.py:201
+#: esiidm/models.py:227
 msgid "Consent is required for the Student Card System"
 msgstr ""
 
-#: esiidm/models.py:240
+#: esiidm/models.py:266
 msgid "Source name"
 msgstr ""
 
-#: esiidm/models.py:246
+#: esiidm/models.py:272
 msgid "Attribute name"
 msgstr ""
 
-#: esiidm/models.py:251
+#: esiidm/models.py:277
 msgid "Extractor"
 msgstr ""
 
-#: esiidm/models.py:253
+#: esiidm/models.py:279
 msgid "Regular expression for extracting the value."
 msgstr ""
 
-#: esiidm/models.py:257
+#: esiidm/models.py:283
 msgid "Active"
 msgstr ""
 
-#: esiidm/models.py:258
+#: esiidm/models.py:284
 msgid "Is the source active?"
 msgstr ""
 
-#: esiidm/models.py:263
+#: esiidm/models.py:289
 msgid "Description"
 msgstr ""
 
-#: esiidm/models.py:265
+#: esiidm/models.py:291
 msgid "Authentication source description."
 msgstr ""
 
-#: esiidm/models.py:279
+#: esiidm/models.py:305
 msgid "Authentication source"
 msgstr ""
 
-#: esiidm/models.py:280
+#: esiidm/models.py:306
 msgid "Authentication sources"
 msgstr ""
 
-#: esiidm/models.py:300
+#: esiidm/models.py:326
 msgid "Identification source"
 msgstr ""
 
-#: esiidm/models.py:311
+#: esiidm/models.py:337
 msgid "Identifier value hash"
 msgstr ""
 
-#: esiidm/models.py:324 esiidm/templates/esiidm/consent.html:16
+#: esiidm/models.py:350 esiidm/templates/esiidm/consent.html:16
 msgid "Identifier"
 msgstr ""
 
-#: esiidm/models.py:325
+#: esiidm/models.py:351
 msgid "Identifiers"
 msgstr ""
 
-#: esiidm/models.py:341
+#: esiidm/models.py:367
 msgid "January"
 msgstr ""
 
-#: esiidm/models.py:342
+#: esiidm/models.py:368
 msgid "February"
 msgstr ""
 
-#: esiidm/models.py:343
+#: esiidm/models.py:369
 msgid "March"
 msgstr ""
 
-#: esiidm/models.py:344
+#: esiidm/models.py:370
 msgid "April"
 msgstr ""
 
-#: esiidm/models.py:345
+#: esiidm/models.py:371
 msgctxt "month name"
 msgid "May"
 msgstr ""
 
-#: esiidm/models.py:346
+#: esiidm/models.py:372
 msgid "June"
 msgstr ""
 
-#: esiidm/models.py:347
+#: esiidm/models.py:373
 msgid "July"
 msgstr ""
 
-#: esiidm/models.py:348
+#: esiidm/models.py:374
 msgid "August"
 msgstr ""
 
-#: esiidm/models.py:349
+#: esiidm/models.py:375
 msgid "September"
 msgstr ""
 
-#: esiidm/models.py:350
+#: esiidm/models.py:376
 msgid "October"
 msgstr ""
 
-#: esiidm/models.py:351
+#: esiidm/models.py:377
 msgid "November"
 msgstr ""
 
-#: esiidm/models.py:352
+#: esiidm/models.py:378
 msgid "December"
 msgstr ""
 
-#: esiidm/models.py:357
+#: esiidm/models.py:383
 msgid "Institution name"
 msgstr ""
 
-#: esiidm/models.py:360
+#: esiidm/models.py:386
 msgid "Term start month"
 msgstr ""
 
-#: esiidm/models.py:362
+#: esiidm/models.py:388
 msgid "Month the term starts on, for expiration date calculations."
 msgstr ""
 
-#: esiidm/models.py:367
+#: esiidm/models.py:393
 msgid "Institution web site"
 msgstr ""
 
-#: esiidm/models.py:368
+#: esiidm/models.py:394
 msgid "Country"
 msgstr ""
 
-#: esiidm/models.py:374
+#: esiidm/models.py:400
 msgid "PIC code"
 msgstr ""
 
-#: esiidm/models.py:380
+#: esiidm/models.py:406
 msgid "EUC code"
 msgstr ""
 
-#: esiidm/models.py:386
+#: esiidm/models.py:412
 msgid "Erasmus code"
 msgstr ""
 
-#: esiidm/models.py:392
+#: esiidm/models.py:418
 msgid "OID code"
 msgstr ""
 
-#: esiidm/models.py:396
+#: esiidm/models.py:422
 msgid "SCHAC Home Organization"
 msgstr ""
 
-#: esiidm/models.py:397
+#: esiidm/models.py:423
 msgid "Your Internet domain. For ESI"
 msgstr ""
 
-#: esiidm/models.py:402
+#: esiidm/models.py:428
 msgid "ESC production key"
 msgstr ""
 
-#: esiidm/models.py:406
+#: esiidm/models.py:432
 msgid "ESC sandbox key"
 msgstr ""
 
-#: esiidm/models.py:422
+#: esiidm/models.py:448
 msgid "Higher Education Institution"
 msgstr ""
 
-#: esiidm/models.py:423
+#: esiidm/models.py:449
 msgid "Higher Education Institutions"
 msgstr ""
 
-#: esiidm/models.py:484
+#: esiidm/models.py:510
 msgid "Fatal error calling ESC_Router()"
 msgstr ""
 
-#: esiidm/models.py:494
+#: esiidm/models.py:520
 msgid "No information to store"
 msgstr ""
 
-#: esiidm/models.py:648
+#: esiidm/models.py:679
 msgid "Person that manages a HEI"
 msgstr ""
 
-#: esiidm/models.py:654
+#: esiidm/models.py:685
 msgid "Managed HEI"
 msgstr ""
 
-#: esiidm/models.py:671
+#: esiidm/models.py:702
 msgid "Officer"
 msgstr ""
 
-#: esiidm/models.py:672
+#: esiidm/models.py:703
 msgid "Officers"
 msgstr ""
 
-#: esiidm/models.py:717
+#: esiidm/models.py:748
 msgid "Student who owns the card"
 msgstr ""
 
-#: esiidm/models.py:723
+#: esiidm/models.py:754
 msgid "Person's HEI"
 msgstr ""
 
-#: esiidm/models.py:728
+#: esiidm/models.py:759
 msgid "European Student Card number"
 msgstr ""
 
-#: esiidm/models.py:732
+#: esiidm/models.py:763
 msgid "Student specific part of ESI"
 msgstr ""
 
-#: esiidm/models.py:740
+#: esiidm/models.py:771
 msgid "Responsible officer"
 msgstr ""
 
-#: esiidm/models.py:749
+#: esiidm/models.py:780
 msgid "ESC registered on"
 msgstr ""
 
-#: esiidm/models.py:756
+#: esiidm/models.py:787
 msgid "Card"
 msgstr ""
 
-#: esiidm/models.py:757
+#: esiidm/models.py:788
 msgid "Cards"
 msgstr ""
 
@@ -656,6 +660,10 @@ msgstr ""
 
 #: esiidm/templates/esiidm/index.html:51
 msgid "for preprinted backgrounds"
+msgstr ""
+
+#: esiidm/templates/esiidm/index.html:57
+msgid "Test presentation"
 msgstr ""
 
 #: esiidm/templates/esiidm/index.html:69
