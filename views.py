@@ -260,4 +260,5 @@ def statistics(request):
     else:
         return HttpResponseForbidden(_('Access not permitted'))
     return render(request, 'esiidm/statistics.html',
-                  {'heis': heis, 'heicount': heicount, 'cardcount': cardcount})
+                  {'heis': heis, 'heicount': heicount, 'cardcount': cardcount,
+                  'authcount': authcount})
