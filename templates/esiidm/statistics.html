@@ -9,18 +9,21 @@
   <p>
   <strong>{% trans "Number of HEIs" %}:</strong> {{ heicount }}
   <strong>{% trans "Number of cards" %}:</strong> {{ cardcount }}
+  <strong>{% trans "Number of authentications" %}:</strong> {{ authcount }}
   </p>
   {% endif %}
   <table class="table table-responsive table-striped table-condensed">
     <tr>
       <th>{% trans "HEI name" %}</th>
       <th>{% trans "students" %}</th>
+      <th>{% trans "authentications" %}</th>
     </tr>
     <tbody>
     {% for h in heis %}
     <tr>
       <td style="text-align: left">{{ h.name }} </td>
       <td style="text-align: center">{{ h.studentcards.count }}</td>
+      <td style="text-align: center">{{ h.authentications.count }}</td>
     </tr>
   {% empty %}
     <tr>

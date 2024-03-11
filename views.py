@@ -87,11 +87,10 @@ def authenticate(request):
                 return HttpResponseForbidden(_('Access not permitted'))
             person = identifier.person
         # Log the person in
-        go_to = request.session.get('next', reverse('esiidm:start'))
-        how = request.session.get('authn_source', None)
+        go_to = request.session.get('next', reverse('esiidm:start'))[:50]
         login(request, person)
         # Log the authentication
-        AuthLog(hei=person.myHEI, how=how, what=go_to).save()
+        AuthLog(hei=person.myHEI, how=source, what=go_to).save()
         return redirect(go_to)
     # How did we get here? Someone is messing with the session ...
     if getattr(settings, 'DEBUG', False): print('auth. final')
@@ -249,10 +248,12 @@ def statistics(request):
     heis = []
     heicount = None
     cardcount = None
+    authcount = None
 
     if request.user.is_superuser or request.user.groups.filter(name='Stats').exists():
         heicount = HEI.objects.count()
         cardcount = StudentCard.objects.count()
+        authcount = AuthLog.objects.count()
         heis = HEI.objects.all()
     elif request.user.is_officer:
         heis = request.user.HEIs

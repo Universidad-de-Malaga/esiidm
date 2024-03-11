@@ -1206,8 +1206,8 @@ class AuthLog(models.Model):
         null=True,
         db_index=True,
         editable=False,
-        related_name='autentications',
-        related_query_name='autentication',
+        related_name='authentications',
+        related_query_name='authentication',
         verbose_name=_('HEI'),
     )
     how = models.ForeignKey(
@@ -1216,8 +1216,8 @@ class AuthLog(models.Model):
         null=True,
         db_index=True,
         editable=False,
-        related_name='autentications',
-        related_query_name='autentication',
+        related_name='authentications',
+        related_query_name='authentication',
         verbose_name=_('How'),
     )
     what = models.CharField(
