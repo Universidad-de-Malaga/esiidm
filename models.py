@@ -1222,7 +1222,7 @@ class AuthLog(models.Model):
     )
     what = models.CharField(
         verbose_name=_('When'),
-        max_lenght=50,
+        max_length=50,
         db_index=True,
         editable=False,
     )
