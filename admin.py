@@ -2,21 +2,21 @@
 # vim:ts=4:expandtab:ai
 # $Id$
 
+from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.contrib import messages
-from django.template.response import TemplateResponse
-from django.urls import path
-from django.db.models import Q
 from django.db import transaction
-from django.utils.translation import ugettext_lazy as _
-from django.utils.translation import ngettext
-from django.shortcuts import render
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
+from django.shortcuts import render
+from django.template.response import TemplateResponse
+from django.urls import path
+from django.utils.translation import ngettext
+from django.utils.translation import ugettext_lazy as _
 from django.http import HttpResponse
 from django.http import HttpResponseForbidden
-from django.conf import settings
-from django import forms
 
 from .utils import get_setting
 
@@ -248,7 +248,7 @@ def register_cards(modeladmin, request, queryset):
         if not result:
             modeladmin.message_user(
                 request,
-                _('Could register card {0}').format(card),
+                _('Could not register card {0}').format(card),
                 messages.WARNING,
             )
 
@@ -267,11 +267,14 @@ def process_batches(modeladmin, request, queryset):
         # the batch HEI
         officer = Officer.objects.get(person=request.user, hei=batch.hei)
         lines = [l.__dict__ for l in batch.batchline_set.all()]
-        total, cards, deleted, new_persons, new_cards, errors = process_lines(
-            lines, batch.hei, officer, host, False
-        )
+        if not len(lines) == 0:
+            # There's no point processing empty batches
+            total, cards, deleted, new_persons, new_cards, errors = process_lines(
+                lines, batch.hei, officer, host, False
+            )
         # Reporting...
         if not total == 0:
+            # Some cards (and probably persons) have been added
             if not new_persons == 0:
                 modeladmin.message_user(
                     request,
@@ -301,6 +304,11 @@ def process_batches(modeladmin, request, queryset):
         if not len(errors) == 0:
             for e in errors:
                 modeladmin.message_user(request, e, messages.ERROR)
+        if len(errors) == 0:
+            # If there are NO errors, the batch has been processed
+            batch.processed = True
+            batch.loadedOn = timezone.now()
+            batch.save()
 
 
 process_batches.short_description = _('Load selected batches')
@@ -1412,6 +1420,10 @@ class CardBatchAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'createdBy':
-            kwargs['queryset'] = Person.objects.filter(is_staff=True)
+        if db_field.name == 'hei':
+            if request.user.is_superuser:
+                allowed_heis = HEI.objects.all()
+            else:
+                allowed_heis = request.user.HEIs
+            kwargs['queryset'] = allowed_heis
         return super().formfield_for_foreignkey(db_field, request, **kwargs)

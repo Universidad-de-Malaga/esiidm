@@ -2,27 +2,33 @@
 # vim:ts=4:expandtab:ai
 # $Id$
 
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404
-from django.shortcuts import redirect
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import login
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import permission_required
 from django.core.signing import TimestampSigner
 from django.core.signing import SignatureExpired
 from django.core.signing import BadSignature
-from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
-from django.utils.translation import pgettext_lazy as pgettext
-from django.utils import timezone
-from django.http import HttpResponseForbidden
-from django.http import HttpResponse
-from django.http import FileResponse
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.decorators import permission_required
-from django.contrib.auth import login
-from django.contrib.auth import logout
-from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
+from django.http import FileResponse
+from django.http import HttpResponseForbidden
+from django.http import HttpResponse
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect
+from django.shortcuts import render
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import pgettext_lazy as pgettext
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+
+import json
 
 from .models import IdSource, Identifier, Person, HEI, StudentCard, AuthLog
 from .utils import get_setting
@@ -262,3 +268,85 @@ def statistics(request):
     return render(request, 'esiidm/statistics.html',
                   {'heis': heis, 'heicount': heicount, 'cardcount': cardcount,
                   'authcount': authcount})
+
+# API implementation for direct student and card creation
+# There is no human interaction, so, no browser cookies
+@method_decorator(csrf_exempt, name='dispatch')
+class TheAPI(View):
+    """
+    The class methods implement RESTful operations on objects:
+    Students and their Cards (StudentCards and their owning Persons)
+    GET mainly for obtaining a deletion token
+    PUT for adding objets
+    DELETE for deleting objects
+    For the API to work, the HEI needs to have a special "officer" named "API
+    officer" whose email is the assigned API key @ the SHO of the corresponding
+    HEI like key@sho, such key MUST be sent in an Authorization header.
+    """
+    hei = None
+    officer = None
+    host = None
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Obtains the HEI that has a given SHO
+        Obtains the API officer for the corresponding HEI with the given authtoken
+        If the objects cannot be retrieved, the action is not authorised
+        """
+        self.host = request.get_host().split(':')[0]
+        hei = HEI.objects.filter(sho=sho)
+        if not len(hei) == 1:
+            return HttpResponseForbidden
+        self.hei = hei[0]
+        token = request.headers.get('Authorization', None)
+        if token is None:
+            return HttpResponseForbidden
+        officer = Officer.objects.filter(hei=self.hei, person__email=token)
+        if not len(officer) == 1:
+            return HttpResponseForbidden
+        self.officer = officer[0]
+        return super().dispatch(request, args, kwargs)
+
+    def put(self, request, *args, **kwargs):
+        """
+        We use the PUT method for adding StudentCards via API like the
+        batches do
+        We expect a JSON structure containing a list of 0 to N dictionaries
+        that we can pass to the loading logic used in the admin
+        Each dictionary MUST be numbered starting from 1 for error
+        referential pourposes
+        """
+        lines = json.loads(request.body.decode('utf-8'))
+        total, cards, deleted, new_persons, new_cards, errors = process_lines(
+            lines, self.hei, self.officer, self.host, False
+        )
+        response_data = {}
+        messages = []
+        # Reporting...
+        if not total == 0:
+            if not new_persons == 0:
+                messages.append(f'{new_persons} persons added.')
+            if not new_cards == 0 or not new_persons == 0:
+                # Cards are added for existing and new persons
+                messages.append(f'{new_cards + new_persons} cards added.')
+        response_data['message'] = ' '.join(messages)
+        status = 201
+        if not len(errors) == 0:
+            status = 409
+            response_data['message'] = ' '.join(errors)
+        return JsonResponse(response_data, status=status)
+
+    def get(self, request, *args, **kwargs):
+        """
+        Receives an ESI that belongs to a given HEI
+        Returns the data with a signed token that has to be sent for deletion
+        """
+
+    def delete(self, request, *args, **kwargs):
+        """
+        Receives a HEI and a signed token for finding the card
+        Deletes the StudentCard with its side effects
+        Status 200 or 204 TBD
+        """
+        response_data = {}
+        return JsonResponse(response_data, status=200)
