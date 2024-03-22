@@ -93,10 +93,13 @@ def authenticate(request):
                 return HttpResponseForbidden(_('Access not permitted'))
             person = identifier.person
         # Log the person in
-        go_to = request.session.get('next', reverse('esiidm:start'))[:50]
+        go_to = request.session.get('next', reverse('esiidm:start'))
         login(request, person)
         # Log the authentication
-        AuthLog(hei=person.myHEI, how=source, what=go_to).save()
+        how = source
+        if type(source) == str:
+            how = IdSource.objects.get(source=source)
+        AuthLog(hei=person.myHEI, how=how, what=go_to[:50]).save()
         return redirect(go_to)
     # How did we get here? Someone is messing with the session ...
     if getattr(settings, 'DEBUG', False): print('auth. final')

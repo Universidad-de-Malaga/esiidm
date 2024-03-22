@@ -8,15 +8,16 @@ from django.contrib import admin
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
+from django.http import HttpResponse
+from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import path
+from django.utils import timezone
 from django.utils.translation import ngettext
 from django.utils.translation import ugettext_lazy as _
-from django.http import HttpResponse
-from django.http import HttpResponseForbidden
 
 from .utils import get_setting
 
@@ -126,6 +127,7 @@ def process_lines(lines, hei, officer, host, file=True):
                         )
                         continue
                     card.delete()
+                    total += 1
                     deleted += 1
             # Data had problems, raise an exception, forcing a roll back
             if not len(errors) == 0:

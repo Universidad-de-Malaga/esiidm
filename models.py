@@ -944,7 +944,7 @@ class StudentCard(models.Model):
             if self.delete_student():
                 # ESC deletion failed, we can't delete the card
                 return
-            self.registered = None
+            self.registeredOn = None
         super(StudentCard, self).delete(*args, **kwargs)
 
     def myESCURL(self):
@@ -1174,7 +1174,7 @@ class BatchLine(models.Model):
     last_name = models.CharField(max_length=80, db_index=True)
     email = models.EmailField(max_length=50, db_index=True)
     identifier = models.CharField(max_length=30, null=True, blank=True)
-    opcode = models.CharField(
+    operation = models.CharField(
         max_length=1,
         default='C',
         choices=(('C', _('Create')), ('D', _('Delete'))),
@@ -1191,6 +1191,9 @@ class BatchLine(models.Model):
             ),
             models.UniqueConstraint(fields=['file', 'esi'], name='esi_unique'),
         ]
+
+    def __str__(self):
+        return f'{self.operation}: {self.esi} - {self.first_name} - {self.last_name} - {self.email}'
 
 
 class AuthLog(models.Model):
