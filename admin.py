@@ -271,9 +271,14 @@ def process_batches(modeladmin, request, queryset):
         lines = [l.__dict__ for l in batch.batchline_set.all()]
         if not len(lines) == 0:
             # There's no point processing empty batches
-            total, cards, deleted, new_persons, new_cards, errors = process_lines(
-                lines, batch.hei, officer, host, False
-            )
+            (
+                total,
+                cards,
+                deleted,
+                new_persons,
+                new_cards,
+                errors,
+            ) = process_lines(lines, batch.hei, officer, host, False)
         # Reporting...
         if not total == 0:
             # Some cards (and probably persons) have been added
@@ -440,11 +445,11 @@ class PersonAdmin(admin.ModelAdmin):
             kwargs['queryset'] = Person.objects.filter(is_staff=True)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-    # def get_readonly_fields(self, request, obj=None):
-    #    readonly_fields = []
-    #    if not request.user.is_superuser and request.user.is_officer:
-    #        readonly_fields = []
-    #    return readonly_fields
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = []
+        if obj is not None and obj.first_name == 'API':
+            readonly_fields = ['__all__']
+        return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
         # Adapt the field sets depending on who's managing the person
@@ -507,7 +512,7 @@ class PersonAdmin(admin.ModelAdmin):
 @admin.register(HEI)
 class HEIAdmin(admin.ModelAdmin):
     search_fields = ['name', 'pic', 'euc', 'oid', 'sho']
-    list_display = ['name', 'pic', 'sho', 'oid', 'url', 'erc']
+    list_display = ['name', 'pic', 'sho', 'api', 'oid', 'url', 'erc']
     list_display_links = ['name', 'pic', 'oid', 'sho']
 
     def has_module_permission(self, request, obj=None):
@@ -591,6 +596,8 @@ class HEIAdmin(admin.ModelAdmin):
                 'euc',
                 'erc',
             ]
+            if not request.user.is_superuser:
+                readonly_fields.append('api')
         return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
@@ -617,7 +624,7 @@ class HEIAdmin(admin.ModelAdmin):
         ]
         if request.user.is_superuser and len(fieldsets) == 3:
             fieldsets.append(
-                (_('Access control'), {'fields': [('managedBy',)]})
+                (_('Access control'), {'fields': [('managedBy', 'api')]})
             )
         return fieldsets
 

@@ -3,6 +3,7 @@
 # $Id$
 
 from django.db import models
+from django.db import transaction
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.core.signing import TimestampSigner
@@ -482,6 +483,10 @@ class HEI(models.Model):
         verbose_name=_('SCHAC Home Organization'),
         help_text=_('Your Internet domain. For ESI'),
     )
+    api = models.BooleanField(
+        verbose_name='API',
+        default=False,
+    )
     # ESC router information
     productionKey = models.CharField(
         max_length=100,
@@ -522,6 +527,24 @@ class HEI(models.Model):
 
     def __str__(self):
         return f'{self.name} - {self.sho} - {self.pic}'
+
+    def save(self, *args, **kwargs):
+        if self.api:
+            # Check if the API officer exists
+            if Officer.objects.exist(
+                hei=self, person__first_name='API', person__last_name='Officer'
+            ):
+                return
+            # If not, we have to create the person and the officer in one go
+            with transaction.atomic():
+                api_person = Person(first_name='API', last_name='Officer')
+                api_person.email = f'{uuid.uuid4().hex}@{self.sho}'
+                api_person.save()
+                api_officer = Officer(
+                    hei=self, person=api_person, manager=self.managedBy
+                )
+                api_officer.save()
+        super(HEI, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         """
@@ -1168,7 +1191,9 @@ class CardBatch(models.Model):
 class BatchLine(models.Model):
     """A fake CSV File line"""
 
-    file = models.ForeignKey(CardBatch, db_index=True, on_delete=models.CASCADE)
+    file = models.ForeignKey(
+        CardBatch, db_index=True, on_delete=models.CASCADE
+    )
     esi = models.CharField(max_length=50, db_index=True)
     first_name = models.CharField(max_length=50, db_index=True)
     last_name = models.CharField(max_length=80, db_index=True)
