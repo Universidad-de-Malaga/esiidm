@@ -35,6 +35,7 @@ from .models import (
     Identifier,
     CardBatch,
     BatchLine,
+    AuthLog,
 )
 from .forms import cardLoadForm, heiLoadForm, officerLoadForm
 
@@ -349,6 +350,24 @@ class IdentifierInline(admin.TabularInline):
         return False
 
 
+class AutLogInline(admin.TabularInline):
+    model = AuthLog
+    hidden_fields = 'id'
+    readonly_fields = ('when', 'student', 'how', 'what')
+    extra = 0
+
+    def has_view_permission(self, request, obj=None):
+        if not super(AuthLog, self).has_view_permission(request, obj):
+            return False
+        if obj is None:
+            return True
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        # Nobody may change Authentication Logs
+        return False
+
+
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     list_filter = [HasAcceptedListFilter, IsInvitedListFilter]
@@ -514,6 +533,7 @@ class HEIAdmin(admin.ModelAdmin):
     search_fields = ['name', 'pic', 'euc', 'oid', 'sho']
     list_display = ['name', 'pic', 'sho', 'api', 'oid', 'url', 'erc']
     list_display_links = ['name', 'pic', 'oid', 'sho']
+    inlines = [AuthLogInline]
 
     def has_module_permission(self, request, obj=None):
         if request.user.is_anonymous:
@@ -1436,3 +1456,44 @@ class CardBatchAdmin(admin.ModelAdmin):
                 allowed_heis = request.user.HEIs
             kwargs['queryset'] = allowed_heis
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(AuthLog)
+class CardBatchAdmin(admin.ModelAdmin):
+    list_filter = ['when']
+    search_fields = ['hei__name']
+    list_display_links = []
+    list_display = [
+        'when',
+        'hei',
+        'student',
+        'how',
+        'what',
+    ]
+
+    def has_module_permission(self, request, obj=None):
+        if request.user.is_anonymous:
+            return False
+        if request.user.is_superuser:
+            return True
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        if obj is None:
+            return True
+        if obj is not None and request.user.is_superuser:
+            return True
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        # Nobody may add Authentication Logs
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        # Nobody may change Authentication Logs
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        # Nobody may delete Authentication Logs
+        return False
+

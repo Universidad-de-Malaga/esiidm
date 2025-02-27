@@ -12,6 +12,7 @@ from .views import (
     reinvite,
     end,
     cards,
+    namelist,
     statistics,
     TheAPI,
 )
@@ -33,6 +34,7 @@ urlpatterns = [
     path('authn/<method>', authn, name='authn'),
     re_path('authn/(?P<method>[^/]+)/.*', authn, name='authn'),
     path('stats/', statistics, name='stats'),
+    path('names/', namelist, name='names'),
     path('api/<sho>', TheAPI.as_view(), name='api'),
     path('api/<sho>/<esi>', TheAPI.as_view(), name='api'),
     path('api/<sho>/<esi>/<deltoken>', TheAPI.as_view(), name='api'),

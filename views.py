@@ -31,7 +31,16 @@ from django.views.decorators.csrf import csrf_exempt
 import base64
 import json
 
-from .models import IdSource, Identifier, Person, HEI, StudentCard, AuthLog
+from .admin import process_lines
+from .models import (
+    IdSource,
+    Identifier,
+    Person,
+    HEI,
+    Officer,
+    StudentCard,
+    AuthLog,
+)
 from .utils import get_setting
 
 
@@ -108,7 +117,12 @@ def authenticate(request):
         how = source
         if type(source) == str:
             how = IdSource.objects.get(source=source)
-        AuthLog(hei=person.myHEI, how=how, what=go_to[:50]).save()
+        AuthLog(
+            hei=person.myHEI,
+            how=how,
+            what=go_to[:50],
+            student=person.is_student,
+        ).save()
         return redirect(go_to)
     # How did we get here? Someone is messing with the session ...
     if getattr(settings, 'DEBUG', False):
@@ -285,9 +299,27 @@ def cards(request, hid, blank=False):
 
 
 @login_required
+def namelist(request):
+    """
+    Generates HEI name list for adding keywords to the metadata
+    """
+    heis = []
+    if (
+        request.user.is_superuser
+        or request.user.groups.filter(name='Stats').exists()
+    ):
+        heis = HEI.objects.all()
+    elif request.user.is_officer:
+        heis = request.user.HEIs
+    else:
+        return HttpResponseForbidden(_('Access not permitted'))
+    return render(request, 'esiidm/namelist.html', {'heis': heis})
+
+
+@login_required
 def statistics(request):
     """
-    Generatest statistics for sharing with the EC
+    Generates statistics for sharing with the EC
     """
     heis = []
     heicount = None
@@ -346,6 +378,10 @@ class TheAPI(View):
         If the objects cannot be retrieved, the action is not authorised.
         """
         self.host = request.get_host().split(':')[0]
+        sho = self.kwargs.get('sho', None)
+        # URL paterns will not allow to reach here, but better safe than sorry
+        if sho is None:
+            return HttpResponseForbidden
         hei = HEI.objects.filter(sho=sho)
         if not len(hei) == 1:
             return HttpResponseForbidden
@@ -407,6 +443,10 @@ class TheAPI(View):
         Receives an ESI that belongs to a given HEI.
         Returns the data with a signed token that has to be sent for deletion.
         """
+        esi = self.kwargs.get('esi', None)
+        # URL paterns will not allow to reach here, but better safe than sorry
+        if esi is None:
+            return HttpResponseForbidden
         response_data = {}
         status = 201
         card = StudentCard.objects.filter(hei=self.hei, esi=esi)
@@ -423,8 +463,11 @@ class TheAPI(View):
             response_data['last_name'] = card.student.last_name
             signer = TimestampSigner()
             token = {'esi': card.esi, 'esc': card.esc, 'otp': card.student.otp}
-            response_data['delcode']: signer.sign(
-                base64.b64encode(json.dumps(token), 'ascii')
+            response_data['deltoken'] = signer.sign(
+                str(
+                    base64.b64encode(bytes(json.dumps(token), 'ascii')),
+                    'ascii',
+                )
             )
         return JsonResponse(response_data, status=status)
 
@@ -434,12 +477,17 @@ class TheAPI(View):
         Deletes the StudentCard with its side effects.
         Status 204 to be consistent with the ESC Router API.
         """
+        esi = self.kwargs.get('esi', None)
+        deltoken = self.kwargs.get('deltoken', None)
+        # URL paterns will not allow to reach here, but better safe than sorry
+        if esi is None or deltoken is None:
+            return HttpResponseForbidden
         # Check is the otp is still valid
         signer = TimestampSigner()
         try:
             # We allow for a five minutes delay from GET
             age = get_setting('API_MAX_MIN', 5)
-            token = signer.unsign(delcode, max_age=60 * age)
+            token = signer.unsign(deltoken, max_age=60 * age)
         except SignatureExpired:
             return HttpResponseForbidden(
                 'Access not permitted. Expired token.'
@@ -455,7 +503,7 @@ class TheAPI(View):
                 'Access not permitted. Invalid token.'
             )
         card = StudentCard.objects.filter(
-            hei=hei,
+            hei=self.hei,
             esi=token['esi'],
             esc=token['esc'],
             student__otp=token['otp'],

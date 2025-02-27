@@ -531,9 +531,9 @@ class HEI(models.Model):
     def save(self, *args, **kwargs):
         if self.api:
             # Check if the API officer exists
-            if Officer.objects.exist(
+            if Officer.objects.filter(
                 hei=self, person__first_name='API', person__last_name='Officer'
-            ):
+            ).exists():
                 return
             # If not, we have to create the person and the officer in one go
             with transaction.atomic():
@@ -1251,6 +1251,12 @@ class AuthLog(models.Model):
     what = models.CharField(
         verbose_name=_('When'),
         max_length=50,
+        db_index=True,
+        editable=False,
+    )
+    student = models.BooleanField(
+        verbose_name=_('Student'),
+        default=False,
         db_index=True,
         editable=False,
     )
